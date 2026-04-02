@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Portail des Jeux Dynamique</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   STYLES DU PORTAIL GLOBAL
+   ═══════════════════════════════════════════════ */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: #111; color: #fff; font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Conteneurs Principaux */
+.screen-container { display: none; height: 100vh; width: 100%; position: relative; overflow-y: auto; background: linear-gradient(135deg, #1e1e2f, #000); }
+.screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px;}
+
+/* Écran de Connexion */
+#login-box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 2px solid #334155; width: 100%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8);}
+.portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 20px; color: #f8fafc; }
+.portal-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #475569; background: #0f172a; color: white; font-family: 'Lexend'; font-size: 1.1rem; text-align: center;}
+.portal-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; color: white; }
+.portal-btn:active { transform: translateY(2px); }
+.btn-admin { background: #3b82f6; box-shadow: 0 4px 0 #1d4ed8; }
+.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 30px; }
+.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 30px; }
+.btn-cancel { background: #ef4444; box-shadow: 0 4px 0 #b91c1c; }
+
+/* Hub des Jeux */
+.game-selector { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding-bottom: 50px;}
+.game-card { background: #222; border: 2px solid #444; border-radius: 15px; width: 280px; padding: 30px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative;}
+.game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.game-title { font-family: 'Bungee', sans-serif; font-size: 1.6rem; margin-bottom: 10px; }
+.game-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; }
+.play-btn { padding: 10px 25px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; color: white;}
+
+/* Bouton Supprimer (Admin) */
+.delete-btn { position: absolute; top: -15px; right: -15px; background: #ef4444; border: 2px solid #fff; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10;}
+.delete-btn:hover { background: #dc2626; transform: scale(1.1); }
+
+/* Lecteur de Jeu (Iframe) */
+#game-player-container { display: none; position: fixed; inset: 0; background: #111; z-index: 500; }
+#game-iframe { width: 100%; height: 100%; border: none; background: #111;}
+
+/* Bouton Retour Global (Flotte au dessus de l'Iframe) */
+#global-home-btn { position: fixed; top: 15px; left: 15px; width: 50px; height: 50px; border-radius: 50%; background: #ef4444; border: 2px solid #fff; color: white; font-size: 1.5rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
+#global-home-btn:hover { background: #b91c1c; transform: scale(1.1); }
+
+/* Formulaire Ajout de Jeu */
+#add-game-box { background: #1e293b; padding: 30px; border-radius: 20px; width: 100%; max-width: 600px; border: 2px solid #334155; }
+textarea.portal-input { height: 120px; text-align: left; resize: vertical; font-family: monospace; font-size: 0.8rem;}
+
+input[type="file"] { padding: 10px; font-size: 0.9rem; text-align: left; cursor: pointer; }
+input[type="file"]::file-selector-button { background: #3b82f6; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Bungee'; margin-right: 15px;}
+.color-picker-wrap { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0 20px 0; }
+input[type="color"] { -webkit-appearance: none; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; background: none; }
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 3px solid #fff; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<button id="global-home-btn" onclick="closeGame()">✖</button>
+
+<div class="screen-container active" id="login-container">
+    <div id="login-box">
+        <h1 class="portal-title">PORTAIL</h1>
+        <p style="margin-bottom: 20px; color: #94a3b8;">Identifiez-vous pour continuer</p>
+        
+        <input type="text" id="login-user" class="portal-input" placeholder="Identifiant (ex: nassim)">
+        <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
+        <button class="portal-btn btn-admin" onclick="tryAdminLogin()">CONNEXION ADMIN</button>
+        
+        <div style="margin: 25px 0; border-top: 1px solid #475569;"></div>
+        
+        <p style="font-size: 0.85rem; color: #94a3b8;">Accès simple sans pouvoir d'ajout :</p>
+        <button class="portal-btn btn-guest" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+    </div>
+</div>
+
+<div class="screen-container" id="hub-container">
+    <h1 class="portal-title">SÉLECTIONNEZ UN JEU</h1>
+    
+    <button id="btn-show-add" class="portal-btn btn-add" style="display: none;" onclick="showAddGameScreen()">+ AJOUTER UN JEU</button>
+    
+    <div class="game-selector" id="games-grid">
+        </div>
+
+    <button class="portal-btn btn-cancel" style="max-width: 200px; margin-top: 30px;" onclick="logout()">DÉCONNEXION</button>
+</div>
+
+<div class="screen-container" id="add-game-container">
+    <h1 class="portal-title">NOUVEAU JEU</h1>
+    <div id="add-game-box">
+        <label style="color:#94a3b8; font-size:0.8rem;">Titre du jeu</label>
+        <input type="text" id="add-title" class="portal-input" placeholder="Ex: Spyfall">
+        
+        <label style="color:#94a3b8; font-size:0.8rem;">Description courte</label>
+        <input type="text" id="add-desc" class="portal-input" placeholder="Ex: Trouvez l'espion.">
+        
+        <label style="color:#94a3b8; font-size:0.8rem;">Couleur du thème</label>
+        <div class="color-picker-wrap">
+            <input type="color" id="add-color" value="#3b82f6">
+            <span id="color-hex-display" style="font-family: monospace;">#3b82f6</span>
+        </div>
+        
+        <div style="margin: 20px 0; border-top: 1px dashed #475569;"></div>
+
+        <label style="color:#94a3b8; font-size:0.8rem;">Importer le fichier HTML du jeu</label>
+        <input type="file" id="add-file" accept=".html" class="portal-input" onchange="handleFileUpload(event)">
+        
+        <label style="color:#94a3b8; font-size:0.8rem;">OU modifiez le code manuellement :</label>
+        <textarea id="add-code" class="portal-input" placeholder="Le code apparaîtra ici après importation du fichier..."></textarea>
+        
+        <button class="portal-btn btn-admin" style="margin-top:20px;" onclick="saveNewGame()">ENREGISTRER LE JEU</button>
+        <button class="portal-btn btn-cancel" onclick="showHubScreen()">ANNULER</button>
+    </div>
+</div>
+
+<div id="game-player-container">
+    <iframe id="game-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<textarea id="default-undercover-code" style="display:none;">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Undercover</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+:root { --accent-und: #3b82f6; --bomb-red: #e74c3c; --panel-aa: #1e293b; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: #111827; color: white; font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.und-screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding: 40px 20px; text-align: center; overflow-y: auto; }
+.und-screen.active { display: flex; animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+h1 { font-family: 'Bungee'; font-size: 2.2rem; color: var(--accent-und); margin-bottom: 10px; text-shadow: 2px 2px #000; }
+.und-btn { background: var(--accent-und); color: #fff; border: none; padding: 15px 20px; border-radius: 10px; font-family: 'Bungee'; font-size: 1rem; cursor: pointer; width: 100%; max-width: 300px; margin: 8px 0; box-shadow: 0 4px 0 #1d4ed8; }
+.und-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #1d4ed8; }
+.und-btn-secondary { background: #374151; box-shadow: 0 4px 0 #1f2937; }
+.und-btn-danger { background: var(--bomb-red); box-shadow: 0 4px 0 #b91c1c; }
+.und-input { width: 100%; max-width: 300px; padding: 12px; border-radius: 8px; border: 2px solid #374151; font-size: 1.1rem; text-align: center; margin-bottom: 10px; background: #111827; color: white; font-family: 'Lexend'; }
+.und-checkbox-wrap { display: flex; align-items: center; gap: 10px; margin: 10px 0; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #374151; }
+.und-card { background: #1e293b; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; margin: 20px 0; border: 2px solid #374151; }
+.und-player-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px; margin-top: 20px; }
+.und-player-item { background: #1e293b; border: 2px solid #374151; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+.und-player-item.dead { opacity: 0.4; border-color: #ef4444; text-decoration: line-through; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="undercover-container">
+    <div class="und-screen active" id="und-scr-setup">
+        <h1>UNDERCOVER</h1><p>Trouvez l'intrus parmi vous.</p>
+        <div id="und-setup-step-1" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <button class="und-btn" onclick="und_chooseMode('LOCAL')">📱 JOUER EN LOCAL</button>
+            <button class="und-btn und-btn-secondary" onclick="und_chooseMode('ONLINE')">🌐 JOUER EN LIGNE</button>
+        </div>
+        <div id="und-setup-step-2" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+            <label style="opacity:0.7; font-size:0.8rem;">Thème des mots</label>
+            <select class="und-input" id="und-in-theme"><option value="CLASSIC">🍎 Classique</option><option value="MANGA">🍥 Manga</option></select>
+            <label style="opacity:0.7; font-size:0.8rem; margin-top: 10px;">Nombre de joueurs (3 à 10)</label>
+            <input type="number" class="und-input" id="und-in-players" value="5" min="3" max="10">
+            <label class="und-checkbox-wrap"><input type="checkbox" id="und-in-mw"><span>Ajouter Mr. White</span></label>
+            <button class="und-btn" style="margin-top: 15px;" onclick="und_generateNameInputs()">SUIVANT</button>
+        </div>
+        <div id="und-setup-step-names" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+            <label style="opacity:0.7; font-size:0.8rem; margin-bottom:10px;">Noms des joueurs</label>
+            <div id="und-name-inputs" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; overflow-y: auto; max-height: 40vh;"></div>
+            <button class="und-btn" onclick="und_initLocalGame()">CRÉER LA PARTIE</button>
+        </div>
+        <div id="und-setup-step-online" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+            <button class="und-btn" onclick="und_hostGame()">CRÉER UN SALON</button>
+            <div style="margin: 20px 0; border-top: 1px solid #374151; width: 100%;"></div>
+            <input type="text" class="und-input" id="und-in-code" placeholder="CODE SALON" maxlength="4" style="text-transform: uppercase;">
+            <input type="text" class="und-input" id="und-in-name" placeholder="VOTRE NOM" maxlength="12">
+            <button class="und-btn und-btn-secondary" onclick="und_joinGame()">REJOINDRE</button>
+        </div>
+    </div>
+    <div class="und-screen" id="und-scr-lobby">
+        <h1>SALON <span id="und-lobby-code"></span></h1>
+        <div class="und-card" style="padding: 15px; text-align: left;"><div id="und-lobby-players" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
+        <div id="und-host-settings" style="display:none; width: 100%; align-items: center; flex-direction: column;">
+            <select class="und-input" id="und-lobby-theme" style="margin-bottom: 5px;"><option value="CLASSIC">Thème : Classique</option><option value="MANGA">Thème : Manga</option></select>
+            <label class="und-checkbox-wrap" style="width: 100%; max-width: 300px; justify-content: center;"><input type="checkbox" id="und-lobby-mw"><span>Jouer avec Mr. White</span></label>
+            <button class="und-btn" onclick="und_startOnlineGame()">LANCER LA PARTIE</button>
+        </div>
+    </div>
+    <div class="und-screen" id="und-scr-roles">
+        <h1 id="und-role-turn-title">JOUEUR 1</h1>
+        <button class="und-btn" id="und-btn-reveal-role" onclick="und_revealRole()">VOIR MON MOT</button>
+        <div class="und-card" id="und-role-display" style="display:none; flex-direction: column; align-items: center;">
+            <p id="und-role-prefix">Ton mot secret est :</p>
+            <div style="font-family:'Bungee'; font-size:2rem; color:var(--accent-und); margin:20px 0; word-wrap:break-word;" id="und-role-word">...</div>
+            <button class="und-btn und-btn-secondary" onclick="und_nextRole()">CACHER ET PASSER</button>
+        </div>
+    </div>
+    <div class="und-screen" id="und-scr-game">
+        <h1>VOTE</h1><p>Discutez et éliminez un joueur.</p>
+        <div class="und-player-grid" id="und-player-grid"></div>
+        <div id="und-wait-msg" style="display:none; color:var(--accent-und); margin-top:20px;">Seul l'Hôte peut valider l'élimination.</div>
+    </div>
+    <div class="und-screen" id="und-scr-mw">
+        <h1 style="color: var(--bomb-red);">MR. WHITE ÉLIMINÉ !</h1><h2 id="und-mw-name">Joueur</h2>
+        <div class="und-card" id="und-mw-host-controls">
+            <p style="color: var(--accent-und); font-weight: bold; margin-bottom: 10px;">Le vrai mot était :</p>
+            <h2 id="und-mw-true-word" style="font-family: 'Bungee';">MOT</h2>
+            <button class="und-btn" onclick="und_resolveMrWhite(true)">IL A TROUVÉ</button><button class="und-btn und-btn-danger" onclick="und_resolveMrWhite(false)">IL A RATÉ</button>
+        </div>
+        <div id="und-mw-wait-msg" style="display:none;">L'hôte valide la réponse...</div>
+    </div>
+    <div class="und-screen" id="und-scr-result">
+        <h1>RÉSULTATS</h1>
+        <div class="und-card">
+            <h2 id="und-res-winner" style="font-family: 'Bungee'; font-size: 1.5rem; margin-bottom: 20px;"></h2>
+            <p>Civils : <b id="und-res-word-civ" style="color: var(--accent-und)"></b></p><p>Undercovers : <b id="und-res-word-und" style="color: var(--bomb-red)"></b></p>
+            <hr style="border: 1px solid #374151; margin: 15px 0;">
+            <div id="und-res-recap" style="text-align: left; font-size: 0.9rem; line-height: 1.5;"></div>
+        </div>
+    </div>
+</div>
+<script>
+const und_DB_CLASSIC = [ ["Pomme", "Poire"], ["Cinéma", "Théâtre"], ["Voiture", "Moto"], ["Plage", "Piscine"], ["Livre", "Magazine"], ["Chien", "Chat"], ["Piano", "Guitare"], ["Soleil", "Lune"], ["Vampire", "Zombie"], ["Ketchup", "Mayonnaise"], ["Thé", "Café"], ["Train", "Avion"], ["Montagne", "Campagne"], ["Boulangerie", "Pâtisserie"], ["Hôpital", "Clinique"] ];
+const und_DB_MANGA = [ ["Goku", "Vegeta"], ["Naruto", "Sasuke"], ["Sharingan", "Rinnegan"], ["Titan Colossal", "Titan Cuirassé"], ["Fruit du Démon", "Haki"], ["Ninja", "Samouraï"], ["Luffy", "Zoro"], ["Kamehameha", "Rasengan"], ["Eren", "Livaï"], ["Shinigami", "Quincy"], ["One Piece", "Dragon Ball"], ["Hunter x Hunter", "Demon Slayer"], ["Goule", "Vampire"] ];
+let und_state = { mode: 'LOCAL', isHost: false, peer: null, conn: null, connections: [], roomCode: '', myId: null, players: [], wordCiv: "", wordUnd: "", currentRoleIdx: 0 };
+const und_GEN_ID = () => Math.random().toString(36).substr(2, 9);
+function und_switchScreen(id) { document.querySelectorAll('.und-screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function und_chooseMode(mode) { und_state.mode = mode; document.getElementById('und-setup-step-1').style.display = 'none'; if(mode === 'LOCAL') document.getElementById('und-setup-step-2').style.display = 'flex'; else document.getElementById('und-setup-step-online').style.display = 'flex'; }
+function und_generateNameInputs() { let count = parseInt(document.getElementById('und-in-players').value); if(count < 3 || count > 10) return alert("Entre 3 et 10 joueurs."); let container = document.getElementById('und-name-inputs'); container.innerHTML = ''; for(let i = 0; i < count; i++) { container.innerHTML += `<input type="text" class="und-input und-player-name-in" value="Joueur ${i+1}">`; } document.getElementById('und-setup-step-2').style.display = 'none'; document.getElementById('und-setup-step-names').style.display = 'flex'; }
+function und_initLocalGame() { let inputs = document.querySelectorAll('.und-player-name-in'); und_state.players = Array.from(inputs).map((inp, i) => ({ id: i.toString(), name: inp.value.trim() || `Joueur ${i+1}`, role: '', isAlive: true })); und_state.isHost = true; let theme = document.getElementById('und-in-theme').value; let useMw = document.getElementById('und-in-mw').checked; und_assignRolesAndWords(theme, useMw); und_state.currentRoleIdx = 0; und_prepareRoleScreen(); }
+function und_hostGame() { try { und_state.mode = 'ONLINE'; und_state.isHost = true; und_state.roomCode = Array.from({length: 4}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random()*26)]).join(''); und_state.myId = 'HOST'; document.getElementById('und-lobby-code').innerText = und_state.roomCode; und_switchScreen('und-scr-lobby'); document.getElementById('und-host-settings').style.display = 'flex'; und_state.players.push({ id: 'HOST', name: document.getElementById('und-in-name').value || 'Hôte', role: '', isAlive: true }); und_updateLobby(); und_state.peer = new Peer('und-' + und_state.roomCode); und_state.peer.on('connection', conn => { conn.on('data', data => und_handleDataHost(data)); und_state.connections.push(conn); }); } catch(e) { alert("Erreur réseau: " + e.message); } }
+function und_joinGame() { und_state.mode = 'ONLINE'; und_st
