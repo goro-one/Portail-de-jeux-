@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="fr" translate="no">
 <head>
 <meta charset="UTF-8">
@@ -14,6 +14,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
+/* ═══════════════════════════════════════════════
+   STYLES DU PORTAIL GLOBAL (DARK / LIGHT THEME)
+   ═══════════════════════════════════════════════ */
 :root {
     --bg-main: #111; --bg-screen: linear-gradient(135deg, #1e1e2f, #000);
     --panel-bg: #1e293b; --panel-border: #334155;
@@ -21,6 +24,7 @@
     --input-bg: #0f172a; --input-border: #475569;
     --accent: #3b82f6; --accent-hover: #2563eb;
     --btn-text: #fff;
+    --btn-sec-bg: #475569; --btn-sec-shadow: #334155; --btn-sec-text: #ffffff;
 }
 
 body.light-mode {
@@ -30,15 +34,18 @@ body.light-mode {
     --input-bg: #f8fafc; --input-border: #94a3b8;
     --accent: #0ea5e9; --accent-hover: #0284c7;
     --btn-text: #fff;
+    --btn-sec-bg: #e2e8f0; --btn-sec-shadow: #cbd5e1; --btn-sec-text: #0f172a;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
 
-.screen-container { display: none; height: calc(100vh - 60px); width: 100%; position: relative; overflow-y: auto; background: var(--bg-screen); padding-bottom: 20px;}
+/* Conteneurs Principaux : Grosse marge en bas pour ne pas cacher le dernier jeu */
+.screen-container { display: none; height: 100vh; width: 100%; position: relative; overflow-y: auto; background: var(--bg-screen); padding-bottom: 120px;}
 .screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;}
 
-#login-container { height: 100vh; justify-content: center; }
+/* Écran Login */
+#login-container { height: 100vh; justify-content: center; padding-bottom: 20px; }
 #login-box { background: var(--panel-bg); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid var(--panel-border); width: 90%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
 .portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 10px; color: var(--text-main); }
 .portal-subtitle { font-family: 'Bungee', sans-serif; font-size: 1.5rem; text-align: center; margin-bottom: 15px; color: var(--accent); }
@@ -47,15 +54,19 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 .portal-input:focus { border-color: var(--accent); outline: none; }
 .portal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 0.9rem; cursor: pointer; transition: 0.2s; color: var(--btn-text); margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:10px;}
 .portal-btn:active { transform: translateY(2px); }
-.btn-admin { background: var(--accent); box-shadow: 0 4px 0 var(--accent-hover); }
-.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 10px; }
-.btn-google { background: #ea4335; box-shadow: 0 4px 0 #b91c1c; }
-.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 20px; }
-.btn-cancel { background: #ef4444; box-shadow: 0 4px 0 #b91c1c; }
 
+.btn-admin { background: var(--accent); box-shadow: 0 4px 0 var(--accent-hover); color: white !important;}
+.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 10px; color: white !important;}
+.btn-google { background: #ea4335; box-shadow: 0 4px 0 #b91c1c; color: white !important;}
+.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 20px; color: white !important;}
+.btn-cancel { background: #ef4444; box-shadow: 0 4px 0 #b91c1c; color: white !important;}
+.btn-secondary { background: var(--btn-sec-bg) !important; color: var(--btn-sec-text) !important; box-shadow: 0 4px 0 var(--btn-sec-shadow) !important; }
+
+/* Filtres */
 .filters-bar { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 800px; padding: 15px; background: var(--panel-bg); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--panel-border);}
 .filter-input { flex: 1; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size:0.9rem;}
 
+/* Cartes (Jeux/Quiz) */
 .items-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding: 10px;}
 .item-card { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; width: 280px; padding: 25px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative; margin-top: 15px;}
 .item-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
@@ -66,22 +77,28 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 .play-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; color: white; font-family: 'Bungee'; box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition:0.2s;}
 .play-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent;}
 
-.fav-btn { position: absolute; top: -15px; left: -15px; background: var(--panel-bg); border: 2px solid #ef4444; color: #ef4444; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;}
-.fav-btn.active { background: #ef4444; color: white;}
-.fav-btn:hover { transform: scale(1.1); }
+/* Boutons Flottants sur Carte */
+.info-btn { position: absolute; top: -15px; left: -15px; background: #1e293b; border: 2px solid #fff; color: #fff; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.info-btn:hover { transform: scale(1.1); background: #334155;}
 
-.info-btn { position: absolute; top: -15px; left: 35px; background: var(--panel-bg); border: 2px solid var(--text-main); color: var(--text-main); width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; font-family: 'Bungee';}
-.info-btn:hover { transform: scale(1.1); }
+.delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.delete-btn:hover { background: #dc2626; transform: scale(1.1); }
 
-.delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;}
-.edit-btn { position: absolute; top: -10px; right: 35px; background: #3b82f6; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;}
+.edit-btn { position: absolute; top: -10px; right: 35px; background: #3b82f6; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.edit-btn:hover { background: #2563eb; transform: scale(1.1); }
 
+.fav-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.3; transition: 0.2s; filter: grayscale(100%);}
+.fav-icon.active { opacity: 1; filter: grayscale(0%); text-shadow: 0 0 5px #ef4444;}
+.fav-icon:hover { transform: scale(1.2); }
+
+/* Navigation Bottom Bar */
 .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--input-bg); border-top: 2px solid var(--panel-border); display: none; z-index: 100;}
 .bottom-nav.active { display: flex; }
 .nav-btn { flex: 1; border: none; background: transparent; color: var(--text-muted); font-family: 'Bungee'; font-size: 1.2rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-direction:column;}
 .nav-btn span { font-size:0.6rem; font-family:'Lexend';}
 .nav-btn.active { color: var(--accent); background: var(--panel-bg); border-top: 3px solid var(--accent);}
 
+/* Tchat Global */
 .chat-box { width: 100%; max-width: 600px; height: 60vh; background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; margin-bottom:15px;}
 .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .chat-msg { background: var(--input-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); width: fit-content; max-width: 80%; text-align: left; }
@@ -91,20 +108,24 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 .chat-input-area input { flex: 1; border: none; padding: 15px; background: var(--input-bg); color: var(--text-main); outline: none; font-family:'Lexend';}
 .chat-input-area button { background: var(--accent); border: none; color: white; padding: 0 20px; cursor: pointer; font-family: 'Bungee'; }
 
+/* Profil & Admin */
 .profile-card { background: var(--panel-bg); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; border: 2px solid var(--panel-border); text-align: center; margin-bottom: 20px;}
 .avatar-select { font-size: 3rem; cursor: pointer; margin-bottom: 10px; display:inline-block; border: 2px dashed transparent; padding:10px; border-radius:50%; transition:0.2s;}
 .avatar-select:hover { border-color: var(--accent); }
 .status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#10b981; margin-left:5px;}
 
+/* Lecteur de Jeu */
 #game-player-container { display: none; position: fixed; inset: 0; background: var(--bg-main); z-index: 500; }
 #game-iframe { width: 100%; height: 100%; border: none; background: transparent;}
 #global-home-btn { position: fixed; top: 15px; left: 15px; width: 50px; height: 50px; border-radius: 50%; background: #ef4444; border: 2px solid #fff; color: white; font-size: 1.5rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
 #global-rules-btn { position: fixed; top: 15px; right: 15px; width: 50px; height: 50px; border-radius: 50%; background: var(--panel-bg); border: 2px solid var(--accent); color: var(--accent); font-size: 1.5rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
 
+/* Modales */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px);}
 .rules-box { background: var(--panel-bg); padding: 30px; border-radius: 12px; max-width: 500px; width: 100%; text-align: left; border: 2px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: var(--text-main); max-height: 85vh; overflow-y: auto;}
 #qrcode { background:white; padding:10px; border-radius:10px; margin:15px auto; display:inline-block;}
 
+/* Formulaire Ajout */
 #add-box { background: var(--panel-bg); padding: 20px; border-radius: 15px; width: 100%; max-width: 600px; border: 2px solid var(--panel-border); }
 .form-row { display: flex; gap: 10px; }
 textarea.portal-input { height: 120px; text-align: left; resize: vertical; font-family: 'Lexend'; font-size: 0.9rem;}
@@ -113,10 +134,9 @@ textarea.portal-code { font-family: monospace; font-size: 0.8rem; }
 input[type="color"] { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; background: none; }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radius: 50%; }
-            </style>
+</style>
 </head>
 <body>
-
 <script>
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playSound(type) {
@@ -135,10 +155,14 @@ function playSound(type) {
     <div id="login-box">
         <h1 class="portal-title">LE PORTAIL</h1>
         <p style="margin-bottom: 20px; color: var(--text-muted); font-size:0.9rem;">Connexion à la plateforme</p>
+        
         <button class="portal-btn btn-google" onclick="loginGoogle()">S'IDENTIFIER AVEC GOOGLE</button>
+        
         <div style="margin: 25px 0; border-top: 1px solid var(--panel-border);"></div>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom:10px;">Accès rapide ou invité :</p>
+        
         <button class="portal-btn btn-guest" style="margin-bottom:20px;" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+
         <div style="border-top: 1px dashed var(--panel-border); padding-top: 15px;">
             <input type="text" id="login-user" class="portal-input" placeholder="Identifiant (Admin Local)">
             <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
@@ -149,22 +173,32 @@ function playSound(type) {
 
 <div class="screen-container" id="games-container">
     <h2 class="portal-subtitle">🕹️ LES JEUX</h2>
+    
     <div class="filters-bar">
         <input type="text" id="search-games" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('games')">
-        <select id="sort-games" class="filter-input" onchange="renderGrid('games')"><option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option><option value="name-asc">Nom (A-Z)</option><option value="name-desc">Nom (Z-A)</option></select>
-        <select id="filter-players-games" class="filter-input" onchange="renderGrid('games')"><option value="all">Nb Joueurs : Tous</option><option value="4">4 Joueurs</option><option value="6">6 Joueurs</option><option value="8">8+ Joueurs</option></select>
+        <select id="sort-games" class="filter-input" onchange="renderGrid('games')">
+            <option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option>
+            <option value="name-asc">Nom (A-Z)</option><option value="name-desc">Nom (Z-A)</option>
+        </select>
+        <select id="filter-players-games" class="filter-input" onchange="renderGrid('games')">
+            <option value="all">Nb Joueurs : Tous</option>
+            <option value="4">4 Joueurs</option><option value="6">6 Joueurs</option><option value="8">8+ Joueurs</option>
+        </select>
     </div>
+
     <button id="btn-add-game" class="portal-btn btn-add" style="display: none;" onclick="showAddScreen('games')">+ AJOUTER UN JEU</button>
     <div class="items-grid" id="games-grid"></div>
 </div>
 
 <div class="screen-container" id="quiz-container">
     <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
+    
     <div class="filters-bar">
         <input type="text" id="search-quiz" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('quiz')">
         <select id="sort-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option><option value="name-asc">Nom (A-Z)</option></select>
         <select id="filter-players-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="all">Nb Joueurs : Tous</option><option value="2">2 Joueurs</option><option value="4">4 Joueurs</option></select>
     </div>
+
     <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981; box-shadow:0 4px 0 #047857;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
     <div class="items-grid" id="quiz-grid"></div>
 </div>
@@ -182,24 +216,30 @@ function playSound(type) {
 
 <div class="screen-container" id="profile-container">
     <h2 class="portal-subtitle" style="color:#ec4899;">👤 MON PROFIL</h2>
+    
     <div class="profile-card">
         <div class="avatar-select" id="prof-avatar" onclick="changeAvatar()">👽</div>
         <h3 id="prof-name" style="font-family:'Bungee'; margin-bottom:5px; font-size:1.5rem;">Joueur</h3>
+        
         <button class="portal-btn btn-secondary" style="margin: 10px auto 20px auto; padding: 8px; width:auto; font-size:0.8rem;" onclick="editProfileName()">✏️ CHANGER DE NOM</button>
+        
         <div style="text-align:left; font-size:0.9rem; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
             Statut : <span class="status-dot"></span> En ligne<br>
             Rôle : <b id="prof-role">Joueur</b><br>
             Jeux joués : <b id="prof-stat-played">0</b>
         </div>
+        
         <div style="border-top:1px dashed var(--panel-border); padding-top:15px; display:flex; flex-direction:column; gap:10px;">
             <button class="portal-btn btn-secondary" onclick="toggleTheme()">🌓 MODE SOMBRE / CLAIR</button>
             <button class="portal-btn btn-secondary" onclick="toggleSound()">🔊 ACTIVER/DÉSACTIVER LE SON</button>
         </div>
     </div>
+    
     <div id="admin-tools" style="display:none; width:100%; max-width:400px;">
         <h3 style="margin-bottom:10px; color:#ef4444; font-family:'Bungee'; text-align:center;">🛠️ OUTILS ADMIN</h3>
         <button class="portal-btn btn-cancel" onclick="exportData()">💾 EXPORTER LA BDD (JSON)</button>
     </div>
+
     <button class="portal-btn btn-cancel" style="max-width: 200px; margin-top: 30px;" onclick="logout()">DÉCONNEXION</button>
 </div>
 
@@ -209,6 +249,7 @@ function playSound(type) {
         <label>Titre</label><input type="text" id="add-title" class="portal-input" placeholder="Ex: Spyfall">
         <label>Description courte</label><input type="text" id="add-desc" class="portal-input" placeholder="Ex: Trouvez l'espion.">
         <label>Tags (séparés par virgule)</label><input type="text" id="add-tags" class="portal-input" placeholder="Ex: Bluff, Cartes, Rapide">
+        
         <div class="form-row">
             <div style="flex:1;"><label>Min Joueurs</label><input type="number" id="add-min-p" class="portal-input" value="3" min="1"></div>
             <div style="flex:1;"><label>Max Joueurs</label><input type="number" id="add-max-p" class="portal-input" value="8" min="2"></div>
@@ -218,9 +259,12 @@ function playSound(type) {
         <div class="color-picker-wrap">
             <input type="color" id="add-color" value="#3b82f6"><span id="color-hex-display" style="font-family: monospace;">#3b82f6</span>
         </div>
+        
         <div style="margin: 20px 0; border-top: 1px dashed var(--panel-border);"></div>
+
         <label>Importer le fichier HTML</label><input type="file" id="add-file" accept=".html" class="portal-input" onchange="handleFileUpload(event)">
         <label>OU modifiez le code manuellement :</label><textarea id="add-code" class="portal-input portal-code" placeholder="Le code apparaîtra ici..."></textarea>
+        
         <button class="portal-btn btn-admin" style="margin-top:20px;" onclick="saveNewItem()">ENREGISTRER</button>
         <button class="portal-btn btn-cancel" onclick="cancelAdd()">ANNULER</button>
     </div>
@@ -234,7 +278,7 @@ function playSound(type) {
     <div class="rules-box" id="global-rules-box">
         <h2 id="global-rules-title" style="font-family:'Bungee'; margin-bottom:15px; text-align:center; font-size:2rem;">RÈGLES</h2>
         <div id="global-rules-content" style="font-size:0.9rem; line-height:1.5; margin-bottom:20px;"></div>
-        <button class="portal-btn" onclick="hideGlobalRules()" style="margin:0 auto; display:block; max-width:200px;">J'AI COMPRIS</button>
+        <button class="portal-btn btn-secondary" onclick="hideGlobalRules()" style="margin:0 auto; display:block; max-width:200px;">J'AI COMPRIS</button>
     </div>
 </div>
 
@@ -243,6 +287,7 @@ function playSound(type) {
         <h2 style="font-family:'Bungee'; margin-bottom:15px; color:var(--accent);">REJOINDRE LA PARTIE</h2>
         <div id="qrcode"></div>
         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">Scannez pour rejoindre via le portail !</p>
+        
         <button class="portal-btn btn-admin" onclick="confirmLaunch(false)">🎮 JOUER</button>
         <button class="portal-btn btn-secondary" onclick="confirmLaunch(true)">👁️ REJOINDRE COMME SPECTATEUR</button>
         <button class="portal-btn btn-cancel" style="margin-top:20px;" onclick="document.getElementById('play-modal').style.display='none'">ANNULER</button>
@@ -259,13 +304,20 @@ function playSound(type) {
 <textarea id="default-undercover-code" style="display:none;">
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Undercover</title><style>body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:50px;}h1{color:#3b82f6;}</style></head><body><h1>UNDERCOVER</h1><p>Insérez votre code de jeu ici via l'éditeur du portail !</p></body></html>
 </textarea>
+
 <script>
+/* ═══════════════════════════════════════════════
+   PWA - Enregistrement Service Worker basique
+   ═══════════════════════════════════════════════ */
 if ('serviceWorker' in navigator) {
     const swCode = `self.addEventListener('fetch', function(e){});`;
     const blob = new Blob([swCode], {type: 'application/javascript'});
     navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
 
+/* ═══════════════════════════════════════════════
+   CONFIGURATION FIREBASE & LOGIQUE PORTAIL
+   ═══════════════════════════════════════════════ */
 const firebaseConfig = {
   apiKey: "AIzaSyBEiKDARJMM8VPbFrLJBzEC7c2paw2HGUQ",
   authDomain: "timebomb3-572e0.firebaseapp.com",
@@ -288,6 +340,7 @@ let portalState = {
     settings: { theme: 'dark', sound: true, favs: {} }
 };
 
+// Chargement des paramètres locaux
 let savedFavs = localStorage.getItem('portal_favs');
 if(savedFavs) portalState.settings.favs = JSON.parse(savedFavs);
 let savedTheme = localStorage.getItem('portal_theme');
@@ -304,6 +357,7 @@ const defaultUndercoverGame = {
 window.onload = () => { 
     switchScreen('login-container'); 
     
+    // Ecoute Firebase : JEUX et QUIZ
     db.ref('portal_games_list').on('value', (snap) => {
         portalState.games = snap.exists() ? snap.val() : [defaultUndercoverGame];
         if(portalState.currentTab === 'games') renderGrid('games');
@@ -314,6 +368,7 @@ window.onload = () => {
         if(portalState.currentTab === 'quiz') renderGrid('quiz');
     });
 
+    // Ecoute Tchat Global
     db.ref('global_chat').limitToLast(50).on('child_added', (snap) => {
         let msg = snap.val();
         let box = document.getElementById('global-chat-messages');
@@ -325,17 +380,21 @@ window.onload = () => {
         box.scrollTop = box.scrollHeight;
     });
 
+    // Ecoute Auth State Google
     auth.onAuthStateChanged(user => {
         if (user) {
+            // ICI C'EST TON EMAIL : CA TE DONNE LES DROITS ADMIN DIRECTEMENT
             let isAdmin = (user.email === "nassim57132@gmail.com"); 
             let userRole = isAdmin ? 'admin' : 'guest';
             let userAvatar = isAdmin ? '👑' : '👽';
             let userName = isAdmin ? 'Nassim (Admin)' : (user.displayName || 'Joueur');
+
             setupUserSession({ uid: user.uid, name: userName, avatar: userAvatar, role: userRole });
         }
     });
 };
 
+/* CONNEXION */
 function loginGoogle() {
     playSound('click');
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -361,14 +420,18 @@ function loginAsGuest() {
 function setupUserSession(userData) {
     playSound('success');
     portalState.currentUser = userData; portalState.role = userData.role;
+    
     localStorage.setItem('portal_uid', userData.uid); localStorage.setItem('portal_name', userData.name);
+    
     document.getElementById('prof-name').innerText = userData.name;
     document.getElementById('prof-avatar').innerText = userData.avatar;
     document.getElementById('prof-role').innerText = userData.role === 'admin' ? 'Administrateur' : 'Joueur';
     document.getElementById('admin-tools').style.display = userData.role === 'admin' ? 'block' : 'none';
+    
     let userRef = db.ref('portal_users/' + userData.uid);
     userRef.update({ name: userData.name, avatar: userData.avatar, online: true });
     userRef.onDisconnect().update({ online: false });
+    
     document.getElementById('bottom-nav').classList.add('active');
     switchTab('games');
 }
@@ -392,7 +455,7 @@ function logout() {
     document.getElementById('bottom-nav').classList.remove('active');
     switchScreen('login-container'); 
 }
-
+/* NAVIGATION & UI */
 function switchScreen(id) { document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
 function switchTab(tab) {
@@ -421,6 +484,7 @@ function changeAvatar() {
     if(portalState.currentUser) { portalState.currentUser.avatar = newAvatar; db.ref('portal_users/' + portalState.currentUser.uid).update({ avatar: newAvatar }); }
 }
 
+/* RENDU DES GRILLES */
 function renderGrid(type) {
     let list = type === 'games' ? [...portalState.games] : [...portalState.quiz];
     const grid = document.getElementById(type + '-grid'); grid.innerHTML = '';
@@ -546,10 +610,10 @@ function exportData() {
 function prepLaunch(itemId, type) {
     playSound('click'); portalState.pendingLaunchId = itemId; portalState.pendingLaunchType = type;
     document.getElementById('qrcode').innerHTML = '';
-    new QRCode(document.getElementById("qrcode"), { text: window.location.href.split('?')[0], width: 128, height: 128, colorDark: "#000000", colorLight: "#ffffff" });
+    let currentUrl = window.location.href.split('?')[0];
+    new QRCode(document.getElementById("qrcode"), { text: currentUrl, width: 128, height: 128, colorDark: "#000000", colorLight: "#ffffff" });
     document.getElementById('play-modal').style.display = 'flex';
 }
-
 function confirmLaunch(isSpectator) {
     playSound('success'); document.getElementById('play-modal').style.display = 'none';
     localStorage.setItem('portal_player_role', isSpectator ? 'spectator' : 'player');
@@ -610,4 +674,3 @@ function sendChatMessage() {
 </script>
 </body>
 </html>
-   
