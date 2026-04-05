@@ -1,514 +1,264 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Portail des Jeux Dynamique</title>
+<meta name="theme-color" content="#1e293b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Portail des Jeux Ultimate</title>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 /* ═══════════════════════════════════════════════
-   STYLES DU PORTAIL GLOBAL
+   STYLES DU PORTAIL GLOBAL (DARK / LIGHT THEME)
    ═══════════════════════════════════════════════ */
+:root {
+    --bg-main: #111; --bg-screen: linear-gradient(135deg, #1e1e2f, #000);
+    --panel-bg: #1e293b; --panel-border: #334155;
+    --text-main: #fff; --text-muted: #94a3b8;
+    --input-bg: #0f172a; --input-border: #475569;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --btn-text: #fff;
+}
+
+body.light-mode {
+    --bg-main: #f8fafc; --bg-screen: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    --panel-bg: #ffffff; --panel-border: #cbd5e1;
+    --text-main: #0f172a; --text-muted: #64748b;
+    --input-bg: #f8fafc; --input-border: #94a3b8;
+    --accent: #0ea5e9; --accent-hover: #0284c7;
+    --btn-text: #fff;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { background: #111; color: #fff; font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
 
 /* Conteneurs Principaux */
-.screen-container { display: none; height: 100vh; width: 100%; position: relative; overflow-y: auto; background: linear-gradient(135deg, #1e1e2f, #000); }
-.screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px;}
+.screen-container { display: none; height: calc(100vh - 60px); width: 100%; position: relative; overflow-y: auto; background: var(--bg-screen); padding-bottom: 20px;}
+.screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;}
 
-/* Écran de Connexion */
-#login-box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 2px solid #334155; width: 100%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8);}
-.portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 20px; color: #f8fafc; }
-.portal-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #475569; background: #0f172a; color: white; font-family: 'Lexend'; font-size: 1.1rem; text-align: center;}
-.portal-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; color: white; }
+/* Écran Login */
+#login-container { height: 100vh; justify-content: center; }
+#login-box { background: var(--panel-bg); padding: 40px; border-radius: 20px; text-align: center; border: 2px solid var(--panel-border); width: 90%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+.portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 10px; color: var(--text-main); }
+.portal-subtitle { font-family: 'Bungee', sans-serif; font-size: 1.5rem; text-align: center; margin-bottom: 15px; color: var(--accent); }
+
+.portal-input { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 10px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size: 1rem; text-align: center; transition: 0.2s;}
+.portal-input:focus { border-color: var(--accent); outline: none; }
+.portal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 0.9rem; cursor: pointer; transition: 0.2s; color: var(--btn-text); margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:10px;}
 .portal-btn:active { transform: translateY(2px); }
-.btn-admin { background: #3b82f6; box-shadow: 0 4px 0 #1d4ed8; }
-.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 30px; }
-.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 30px; }
+.btn-admin { background: var(--accent); box-shadow: 0 4px 0 var(--accent-hover); }
+.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 10px; }
+.btn-google { background: #ea4335; box-shadow: 0 4px 0 #b91c1c; }
+.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 20px; }
 .btn-cancel { background: #ef4444; box-shadow: 0 4px 0 #b91c1c; }
 
-/* Hub des Jeux */
-.game-selector { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding-bottom: 50px;}
-.game-card { background: #222; border: 2px solid #444; border-radius: 15px; width: 280px; padding: 30px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative;}
-.game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-.game-title { font-family: 'Bungee', sans-serif; font-size: 1.6rem; margin-bottom: 10px; }
-.game-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; }
-.play-btn { padding: 10px 25px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; color: white;}
+/* Filtres */
+.filters-bar { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 800px; padding: 15px; background: var(--panel-bg); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--panel-border);}
+.filter-input { flex: 1; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size:0.9rem;}
 
-/* Bouton Infos/Règles */
-.btn-info-rules { position: absolute; top: -15px; left: -15px; width: 40px; height: 40px; border-radius: 50%; background: #1e293b; border: 2px solid #fff; color: white; font-family: 'Bungee'; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
-.btn-info-rules:hover { background: #3b82f6; transform: scale(1.1); }
+/* Cartes (Jeux/Quiz) */
+.items-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding: 10px;}
+.item-card { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; width: 280px; padding: 25px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative; margin-top: 15px;}
+.item-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.item-title { font-family: 'Bungee', sans-serif; font-size: 1.4rem; margin-bottom: 5px; display:flex; justify-content:center; align-items:center; gap:8px;}
+.item-tags { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; font-style: italic;}
+.item-players { font-size: 0.8rem; color: var(--text-main); font-weight:bold; margin-bottom: 10px; background:var(--input-bg); padding:4px; border-radius:4px; border:1px solid var(--panel-border);}
+.item-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;}
+.play-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; color: white; font-family: 'Bungee'; box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition:0.2s;}
+.play-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent;}
 
-/* Boutons Admin (Supprimer & Éditer) */
-.delete-btn { position: absolute; top: -15px; right: -15px; background: #ef4444; border: 2px solid #fff; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10;}
+/* Boutons Flottants sur Carte */
+.info-btn { position: absolute; top: -15px; left: -15px; background: #1e293b; border: 2px solid #fff; color: #fff; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.info-btn:hover { transform: scale(1.1); background: #334155;}
+
+.delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
 .delete-btn:hover { background: #dc2626; transform: scale(1.1); }
 
-.edit-btn { position: absolute; top: -15px; right: 35px; background: #f59e0b; border: 2px solid #fff; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10;}
-.edit-btn:hover { background: #d97706; transform: scale(1.1); }
+.edit-btn { position: absolute; top: -10px; right: 35px; background: #3b82f6; border: 2px solid #fff; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.edit-btn:hover { background: #2563eb; transform: scale(1.1); }
 
-/* Lecteur de Jeu (Iframe) */
-#game-player-container { display: none; position: fixed; inset: 0; background: #000; z-index: 500; }
-#game-iframe { width: 100%; height: 100%; border: none; background: #111;}
+.fav-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.3; transition: 0.2s; filter: grayscale(100%);}
+.fav-icon.active { opacity: 1; filter: grayscale(0%); text-shadow: 0 0 5px #ef4444;}
+.fav-icon:hover { transform: scale(1.2); }
 
-/* Bouton Retour Global */
+/* Navigation Bottom Bar */
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--input-bg); border-top: 2px solid var(--panel-border); display: none; z-index: 100;}
+.bottom-nav.active { display: flex; }
+.nav-btn { flex: 1; border: none; background: transparent; color: var(--text-muted); font-family: 'Bungee'; font-size: 1rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-direction:column;}
+.nav-btn span { font-size:0.6rem; font-family:'Lexend';}
+.nav-btn.active { color: var(--accent); background: var(--panel-bg); border-top: 3px solid var(--accent);}
+
+/* Tchat Global */
+.chat-box { width: 100%; max-width: 600px; height: 60vh; background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; margin-bottom:15px;}
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { background: var(--input-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); width: fit-content; max-width: 80%; text-align: left; }
+.chat-msg.me { align-self: flex-end; background: var(--accent); color: white; border-color: var(--accent-hover); }
+.chat-header { font-size: 0.75rem; font-weight: bold; margin-bottom: 3px; display:flex; justify-content:space-between; gap:10px;}
+.chat-input-area { display: flex; border-top: 2px solid var(--panel-border); }
+.chat-input-area input { flex: 1; border: none; padding: 15px; background: var(--input-bg); color: var(--text-main); outline: none; font-family:'Lexend';}
+.chat-input-area button { background: var(--accent); border: none; color: white; padding: 0 20px; cursor: pointer; font-family: 'Bungee'; }
+
+/* Profil & Admin */
+.profile-card { background: var(--panel-bg); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; border: 2px solid var(--panel-border); text-align: center; margin-bottom: 20px;}
+.avatar-select { font-size: 3rem; cursor: pointer; margin-bottom: 10px; display:inline-block; border: 2px dashed transparent; padding:10px; border-radius:50%; transition:0.2s;}
+.avatar-select:hover { border-color: var(--accent); }
+.status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#10b981; margin-left:5px;}
+
+/* Lecteur de Jeu */
+#game-player-container { display: none; position: fixed; inset: 0; background: var(--bg-main); z-index: 500; }
+#game-iframe { width: 100%; height: 100%; border: none; background: transparent;}
 #global-home-btn { position: fixed; top: 15px; left: 15px; width: 50px; height: 50px; border-radius: 50%; background: #ef4444; border: 2px solid #fff; color: white; font-size: 1.5rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
-#global-home-btn:hover { background: #b91c1c; transform: scale(1.1); }
+#global-rules-btn { position: fixed; top: 15px; right: 15px; width: 50px; height: 50px; border-radius: 50%; background: var(--panel-bg); border: 2px solid var(--accent); color: var(--accent); font-size: 1.5rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
 
-/* Formulaire Ajout / Edition de Jeu */
-#add-game-box { background: #1e293b; padding: 30px; border-radius: 20px; width: 100%; max-width: 600px; border: 2px solid #334155; margin-bottom: 50px;}
-textarea.portal-input { height: 120px; text-align: left; resize: vertical; font-family: monospace; font-size: 0.8rem;}
+/* Modales */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px);}
+.rules-box { background: var(--panel-bg); padding: 30px; border-radius: 12px; max-width: 500px; width: 100%; text-align: left; border: 2px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: var(--text-main); max-height: 85vh; overflow-y: auto;}
+#qrcode { background:white; padding:10px; border-radius:10px; margin:15px auto; display:inline-block;}
 
-input[type="file"] { padding: 10px; font-size: 0.9rem; text-align: left; cursor: pointer; }
-input[type="file"]::file-selector-button { background: #3b82f6; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-family: 'Bungee'; margin-right: 15px;}
+/* Formulaire Ajout */
+#add-box { background: var(--panel-bg); padding: 20px; border-radius: 15px; width: 100%; max-width: 600px; border: 2px solid var(--panel-border); }
+.form-row { display: flex; gap: 10px; }
+textarea.portal-input { height: 120px; text-align: left; resize: vertical; font-family: 'Lexend'; font-size: 0.9rem;}
+textarea.portal-code { font-family: monospace; font-size: 0.8rem; }
 .color-picker-wrap { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0 20px 0; }
-input[type="color"] { -webkit-appearance: none; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; background: none; }
+input[type="color"] { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; background: none; }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: 3px solid #fff; border-radius: 50%; }
-
-/* Modale des règles */
-#rules-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-.rules-box { background: #1e293b; padding: 30px; border-radius: 20px; max-width: 450px; width: 100%; text-align: center; border: 2px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.rules-title { font-family: 'Bungee'; font-size: 1.5rem; margin-bottom: 15px; color: #fff; }
-.rules-text { font-size: 0.95rem; line-height: 1.6; color: #cbd5e1; margin-bottom: 25px; text-align: left; overflow-y: auto; max-height: 50vh;}
-.rules-close { background: #ef4444; color: white; border: none; padding: 12px 25px; border-radius: 10px; font-family: 'Bungee'; font-size: 1rem; cursor: pointer; width: 100%; }
+input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radius: 50%; }
 </style>
 </head>
 <body>
 
-<button id="global-home-btn" onclick="closeGame()">✖</button>
+<script>
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if(!portalState.settings.sound) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+    if(type === 'success') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
+}
+</script>
 
-<div id="rules-modal">
-    <div class="rules-box">
-        <h2 class="rules-title">Règles du jeu</h2>
-        <div id="rules-text" class="rules-text"></div>
-        <button class="rules-close" onclick="closeRules()">J'AI COMPRIS !</button>
-    </div>
-</div>
+<button id="global-home-btn" onclick="closeGame()">✖</button>
+<button id="global-rules-btn" onclick="showGlobalRules()">i</button>
 
 <div class="screen-container active" id="login-container">
     <div id="login-box">
-        <h1 class="portal-title">PORTAIL</h1>
-        <p style="margin-bottom: 20px; color: #94a3b8;">Identifiez-vous pour continuer</p>
+        <h1 class="portal-title">LE PORTAIL</h1>
+        <p style="margin-bottom: 20px; color: var(--text-muted); font-size:0.9rem;">Connexion à la plateforme</p>
         
-        <input type="text" id="login-user" class="portal-input" placeholder="Identifiant (ex: nassim)">
-        <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
-        <button class="portal-btn btn-admin" onclick="tryAdminLogin()">CONNEXION ADMIN</button>
+        <button class="portal-btn btn-google" onclick="loginGoogle()">S'IDENTIFIER AVEC GOOGLE</button>
         
-        <div style="margin: 25px 0; border-top: 1px solid #475569;"></div>
+        <div style="margin: 25px 0; border-top: 1px solid var(--panel-border);"></div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom:10px;">Accès rapide ou invité :</p>
         
-        <p style="font-size: 0.85rem; color: #94a3b8;">Accès simple sans pouvoir d'ajout :</p>
-        <button class="portal-btn btn-guest" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+        <button class="portal-btn btn-guest" style="margin-bottom:20px;" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+
+        <div style="border-top: 1px dashed var(--panel-border); padding-top: 15px;">
+            <input type="text" id="login-user" class="portal-input" placeholder="Identifiant (Admin Local)">
+            <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
+            <button class="portal-btn btn-admin" onclick="tryLocalLogin()">CONNEXION LOCALE</button>
+        </div>
     </div>
 </div>
 
-<div class="screen-container" id="hub-container">
-    <h1 class="portal-title">SÉLECTIONNEZ UN JEU</h1>
+<div class="screen-container" id="games-container">
+    <h2 class="portal-subtitle">🕹️ LES JEUX</h2>
     
-    <button id="btn-show-add" class="portal-btn btn-add" style="display: none;" onclick="showAddGameScreen()">+ AJOUTER UN JEU</button>
+    <div class="filters-bar">
+        <input type="text" id="search-games" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('games')">
+        <select id="sort-games" class="filter-input" onchange="renderGrid('games')">
+            <option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option>
+            <option value="name-asc">Nom (A-Z)</option><option value="name-desc">Nom (Z-A)</option>
+        </select>
+        <select id="filter-players-games" class="filter-input" onchange="renderGrid('games')">
+            <option value="all">Nb Joueurs : Tous</option>
+            <option value="4">4 Joueurs</option><option value="6">6 Joueurs</option><option value="8">8+ Joueurs</option>
+        </select>
+    </div>
+
+    <button id="btn-add-game" class="portal-btn btn-add" style="display: none;" onclick="showAddScreen('games')">+ AJOUTER UN JEU</button>
+    <div class="items-grid" id="games-grid"></div>
+</div>
+
+<div class="screen-container" id="quiz-container">
+    <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
     
-    <div class="game-selector" id="games-grid">
+    <div class="filters-bar">
+        <input type="text" id="search-quiz" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('quiz')">
+        <select id="sort-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option><option value="name-asc">Nom (A-Z)</option></select>
+        <select id="filter-players-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="all">Nb Joueurs : Tous</option><option value="2">2 Joueurs</option><option value="4">4 Joueurs</option></select>
+    </div>
+
+    <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981; box-shadow:0 4px 0 #047857;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
+    <div class="items-grid" id="quiz-grid"></div>
+</div>
+
+<div class="screen-container" id="chat-container">
+    <h2 class="portal-subtitle" style="color:#f59e0b;">💬 TCHAT GLOBAL</h2>
+    <div class="chat-box">
+        <div class="chat-messages" id="global-chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Écrire un message..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()">ENVOYER</button>
         </div>
+    </div>
+</div>
+
+<div class="screen-container" id="profile-container">
+    <h2 class="portal-subtitle" style="color:#ec4899;">👤 MON PROFIL</h2>
+    
+    <div class="profile-card">
+        <div class="avatar-select" id="prof-avatar" onclick="changeAvatar()">👽</div>
+        <h3 id="prof-name" style="font-family:'Bungee'; margin-bottom:5px; font-size:1.5rem;">Joueur</h3>
+        
+        <button class="portal-btn btn-secondary" style="margin: 10px auto 20px auto; padding: 8px; width:auto; font-size:0.8rem;" onclick="editProfileName()">✏️ CHANGER DE NOM</button>
+        
+        <div style="text-align:left; font-size:0.9rem; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
+            Statut : <span class="status-dot"></span> En ligne<br>
+            Rôle : <b id="prof-role">Joueur</b><br>
+            Jeux joués : <b id="prof-stat-played">0</b>
+        </div>
+        
+        <div style="border-top:1px dashed var(--panel-border); padding-top:15px; display:flex; flex-direction:column; gap:10px;">
+            <button class="portal-btn btn-secondary" onclick="toggleTheme()">🌓 MODE SOMBRE / CLAIR</button>
+            <button class="portal-btn btn-secondary" onclick="toggleSound()">🔊 ACTIVER/DÉSACTIVER LE SON</button>
+        </div>
+    </div>
+    
+    <div id="admin-tools" style="display:none; width:100%; max-width:400px;">
+        <h3 style="margin-bottom:10px; color:#ef4444; font-family:'Bungee'; text-align:center;">🛠️ OUTILS ADMIN</h3>
+        <button class="portal-btn btn-cancel" onclick="exportData()">💾 EXPORTER LA BDD (JSON)</button>
+    </div>
 
     <button class="portal-btn btn-cancel" style="max-width: 200px; margin-top: 30px;" onclick="logout()">DÉCONNEXION</button>
 </div>
 
-<div class="screen-container" id="add-game-container">
-    <h1 class="portal-title" id="form-screen-title">NOUVEAU JEU</h1>
-    <div id="add-game-box">
-        <label style="color:#94a3b8; font-size:0.8rem;">Titre du jeu</label>
-        <input type="text" id="add-title" class="portal-input" placeholder="Ex: Spyfall">
+<div class="screen-container" id="add-item-container">
+    <h1 class="portal-title" id="add-title-main">NOUVEL AJOUT</h1>
+    <div id="add-box">
+        <label>Titre</label><input type="text" id="add-title" class="portal-input" placeholder="Ex: Spyfall">
+        <label>Description courte</label><input type="text" id="add-desc" class="portal-input" placeholder="Ex: Trouvez l'espion.">
+        <label>Tags (séparés par virgule)</label><input type="text" id="add-tags" class="portal-input" placeholder="Ex: Bluff, Cartes, Rapide">
         
-        <label style="color:#94a3b8; font-size:0.8rem;">Description courte</label>
-        <input type="text" id="add-desc" class="portal-input" placeholder="Ex: Trouvez l'espion.">
-        
-        <label style="color:#94a3b8; font-size:0.8rem;">Règles du jeu (S'affichera via le bouton "i")</label>
-        <textarea id="add-rules" class="portal-input" placeholder="Expliquez brièvement comment jouer..."></textarea>
+        <div class="form-row">
+            <div style="flex:1;"><label>Min Joueurs</label><input type="number" id="add-min-p" class="portal-input" value="3" min="1"></div>
+            <div style="flex:1;"><label>Max Joueurs</label><input type="number" id="add-max-p" class="portal-input" value="8" min="2"></div>
+        </div>
 
-        <label style="color:#94a3b8; font-size:0.8rem;">Couleur du thème</label>
+        <label>Règles du jeu</label><textarea id="add-rules" class="portal-input" placeholder="Ex: But du jeu..."></textarea>
+        <label>Couleur du thème</label>
         <div class="color-picker-wrap">
-            <input type="color" id="add-color" value="#3b82f6">
-            <span id="color-hex-display" style="font-family: monospace;">#3b82f6</span>
+            <input type="color" id="add-color" value="#3b82f6"><span id="color-hex-display" style="font-family: monospace;">#3b82f6</span>
         </div>
         
-        <div style="margin: 20px 0; border-top: 1px dashed #475569;"></div>
+        <div style="margin: 20px 0; border-top: 1px dashed var(--panel-border);"></div>
 
-        <label style="color:#94a3b8; font-size:0.8rem;">Importer le fichier HTML du jeu</label>
-        <input type="file" id="add-file" accept=".html" class="portal-input" onchange="handleFileUpload(event)">
-        
-        <label style="color:#94a3b8; font-size:0.8rem;">OU modifiez le code manuellement :</label>
-        <textarea id="add-code" class="portal-input" placeholder="Le code apparaîtra ici après importation du fichier..."></textarea>
-        
-        <button class="portal-btn btn-admin" style="margin-top:20px;" onclick="saveGame()">ENREGISTRER LE JEU</button>
-        <button class="portal-btn btn-cancel" onclick="showHubScreen()">ANNULER</button>
-    </div>
-</div>
-
-<div id="game-player-container">
-    <iframe id="game-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
-</div>
-
-<textarea id="default-undercover-code" style="display:none;">
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Undercover</title>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"><\/script>
-<style>
-:root { --accent-und: #3b82f6; --bomb-red: #e74c3c; --panel-aa: #1e293b; }
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { background: #111827; color: white; font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-.und-screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding: 40px 20px; text-align: center; overflow-y: auto; }
-.und-screen.active { display: flex; animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-h1 { font-family: 'Bungee'; font-size: 2.2rem; color: var(--accent-und); margin-bottom: 10px; text-shadow: 2px 2px #000; }
-.und-btn { background: var(--accent-und); color: #fff; border: none; padding: 15px 20px; border-radius: 10px; font-family: 'Bungee'; font-size: 1rem; cursor: pointer; width: 100%; max-width: 300px; margin: 8px 0; box-shadow: 0 4px 0 #1d4ed8; }
-.und-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #1d4ed8; }
-.und-btn-secondary { background: #374151; box-shadow: 0 4px 0 #1f2937; }
-.und-btn-danger { background: var(--bomb-red); box-shadow: 0 4px 0 #b91c1c; }
-.und-input { width: 100%; max-width: 300px; padding: 12px; border-radius: 8px; border: 2px solid #374151; font-size: 1.1rem; text-align: center; margin-bottom: 10px; background: #111827; color: white; font-family: 'Lexend'; }
-.und-checkbox-wrap { display: flex; align-items: center; gap: 10px; margin: 10px 0; background: #1e293b; padding: 10px 15px; border-radius: 8px; border: 1px solid #374151; }
-.und-card { background: #1e293b; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; margin: 20px 0; border: 2px solid #374151; }
-.und-player-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 400px; margin-top: 20px; }
-.und-player-item { background: #1e293b; border: 2px solid #374151; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-.und-player-item.dead { opacity: 0.4; border-color: #ef4444; text-decoration: line-through; pointer-events: none; }
-</style>
-</head>
-<body>
-<div id="undercover-container">
-    <div class="und-screen active" id="und-scr-setup">
-        <h1>UNDERCOVER</h1><p>Trouvez l'intrus parmi vous.</p>
-        <div id="und-setup-step-1" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button class="und-btn" onclick="und_chooseMode('LOCAL')">📱 JOUER EN LOCAL</button>
-            <button class="und-btn und-btn-secondary" onclick="und_chooseMode('ONLINE')">🌐 JOUER EN LIGNE</button>
-        </div>
-        <div id="und-setup-step-2" style="display: none; width: 100%; flex-direction: column; align-items: center;">
-            <label style="opacity:0.7; font-size:0.8rem;">Thème des mots</label>
-            <select class="und-input" id="und-in-theme"><option value="CLASSIC">🍎 Classique</option><option value="MANGA">🍥 Manga</option></select>
-            <label style="opacity:0.7; font-size:0.8rem; margin-top: 10px;">Nombre de joueurs (3 à 10)</label>
-            <input type="number" class="und-input" id="und-in-players" value="5" min="3" max="10">
-            <label class="und-checkbox-wrap"><input type="checkbox" id="und-in-mw"><span>Ajouter Mr. White</span></label>
-            <button class="und-btn" style="margin-top: 15px;" onclick="und_generateNameInputs()">SUIVANT</button>
-            <button class="und-btn und-btn-secondary" onclick="und_resetSetup()">RETOUR</button>
-        </div>
-        <div id="und-setup-step-names" style="display: none; width: 100%; flex-direction: column; align-items: center;">
-            <label style="opacity:0.7; font-size:0.8rem; margin-bottom:10px;">Noms des joueurs</label>
-            <div id="und-name-inputs" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; overflow-y: auto; max-height: 40vh;"></div>
-            <button class="und-btn" onclick="und_initLocalGame()">CRÉER LA PARTIE</button>
-            <button class="und-btn und-btn-secondary" onclick="und_resetSetup()">RETOUR</button>
-        </div>
-        <div id="und-setup-step-online" style="display: none; width: 100%; flex-direction: column; align-items: center;">
-            <button class="und-btn" onclick="und_hostGame()">CRÉER UN SALON</button>
-            <div style="margin: 20px 0; border-top: 1px solid #374151; width: 100%;"></div>
-            <input type="text" class="und-input" id="und-in-code" placeholder="CODE SALON" maxlength="4" style="text-transform: uppercase;">
-            <input type="text" class="und-input" id="und-in-name" placeholder="VOTRE NOM" maxlength="12">
-            <button class="und-btn und-btn-secondary" onclick="und_joinGame()">REJOINDRE</button>
-            <button class="und-btn" style="background:transparent; border:1px solid #475569; margin-top:20px;" onclick="und_resetSetup()">RETOUR</button>
-        </div>
-    </div>
-    <div class="und-screen" id="und-scr-lobby">
-        <h1>SALON <span id="und-lobby-code"></span></h1>
-        <div class="und-card" style="padding: 15px; text-align: left;"><div id="und-lobby-players" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
-        <div id="und-host-settings" style="display:none; width: 100%; align-items: center; flex-direction: column;">
-            <select class="und-input" id="und-lobby-theme" style="margin-bottom: 5px;"><option value="CLASSIC">Thème : Classique</option><option value="MANGA">Thème : Manga</option></select>
-            <label class="und-checkbox-wrap" style="width: 100%; max-width: 300px; justify-content: center;"><input type="checkbox" id="und-lobby-mw"><span>Jouer avec Mr. White</span></label>
-            <button class="und-btn" onclick="und_startOnlineGame()">LANCER LA PARTIE</button>
-        </div>
-    </div>
-    <div class="und-screen" id="und-scr-roles">
-        <h1 id="und-role-turn-title">JOUEUR 1</h1>
-        <button class="und-btn" id="und-btn-reveal-role" onclick="und_revealRole()">VOIR MON MOT</button>
-        <div class="und-card" id="und-role-display" style="display:none; flex-direction: column; align-items: center;">
-            <p id="und-role-prefix">Ton mot secret est :</p>
-            <div style="font-family:'Bungee'; font-size:2rem; color:var(--accent-und); margin:20px 0; word-wrap:break-word;" id="und-role-word">...</div>
-            <button class="und-btn und-btn-secondary" onclick="und_nextRole()">CACHER ET PASSER</button>
-        </div>
-    </div>
-    <div class="und-screen" id="und-scr-game">
-        <h1>VOTE</h1><p>Discutez et éliminez un joueur.</p>
-        <div class="und-player-grid" id="und-player-grid"></div>
-        <div id="und-wait-msg" style="display:none; color:var(--accent-und); margin-top:20px;">Seul l'Hôte peut valider l'élimination.</div>
-    </div>
-    <div class="und-screen" id="und-scr-mw">
-        <h1 style="color: var(--bomb-red);">MR. WHITE ÉLIMINÉ !</h1><h2 id="und-mw-name">Joueur</h2>
-        <div class="und-card" id="und-mw-host-controls">
-            <p style="color: var(--accent-und); font-weight: bold; margin-bottom: 10px;">Le vrai mot était :</p>
-            <h2 id="und-mw-true-word" style="font-family: 'Bungee';">MOT</h2>
-            <button class="und-btn" onclick="und_resolveMrWhite(true)">IL A TROUVÉ</button><button class="und-btn und-btn-danger" onclick="und_resolveMrWhite(false)">IL A RATÉ</button>
-        </div>
-        <div id="und-mw-wait-msg" style="display:none;">L'hôte valide la réponse...</div>
-    </div>
-    <div class="und-screen" id="und-scr-result">
-        <h1>RÉSULTATS</h1>
-        <div class="und-card">
-            <h2 id="und-res-winner" style="font-family: 'Bungee'; font-size: 1.5rem; margin-bottom: 20px;"></h2>
-            <p>Civils : <b id="und-res-word-civ" style="color: var(--accent-und)"></b></p><p>Undercovers : <b id="und-res-word-und" style="color: var(--bomb-red)"></b></p>
-            <hr style="border: 1px solid #374151; margin: 15px 0;">
-            <div id="und-res-recap" style="text-align: left; font-size: 0.9rem; line-height: 1.5;"></div>
-        </div>
-        <button class="und-btn" onclick="location.reload()">NOUVELLE PARTIE</button>
-    </div>
-</div>
-<script>
-const und_DB_CLASSIC = [ ["Pomme", "Poire"], ["Cinéma", "Théâtre"], ["Voiture", "Moto"], ["Plage", "Piscine"], ["Livre", "Magazine"], ["Chien", "Chat"], ["Piano", "Guitare"], ["Soleil", "Lune"], ["Vampire", "Zombie"], ["Ketchup", "Mayonnaise"], ["Thé", "Café"], ["Train", "Avion"], ["Montagne", "Campagne"], ["Boulangerie", "Pâtisserie"], ["Hôpital", "Clinique"] ];
-const und_DB_MANGA = [ ["Goku", "Vegeta"], ["Naruto", "Sasuke"], ["Sharingan", "Rinnegan"], ["Titan Colossal", "Titan Cuirassé"], ["Fruit du Démon", "Haki"], ["Ninja", "Samouraï"], ["Luffy", "Zoro"], ["Kamehameha", "Rasengan"], ["Eren", "Livaï"], ["Shinigami", "Quincy"], ["One Piece", "Dragon Ball"], ["Hunter x Hunter", "Demon Slayer"], ["Goule", "Vampire"] ];
-let und_state = { mode: 'LOCAL', isHost: false, peer: null, conn: null, connections: [], roomCode: '', myId: null, players: [], wordCiv: "", wordUnd: "", currentRoleIdx: 0 };
-const und_GEN_ID = () => Math.random().toString(36).substr(2, 9);
-function und_switchScreen(id) { document.querySelectorAll('.und-screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
-function und_chooseMode(mode) { und_state.mode = mode; document.getElementById('und-setup-step-1').style.display = 'none'; if(mode === 'LOCAL') document.getElementById('und-setup-step-2').style.display = 'flex'; else document.getElementById('und-setup-step-online').style.display = 'flex'; }
-function und_resetSetup() { document.getElementById('und-setup-step-2').style.display = 'none'; document.getElementById('und-setup-step-names').style.display = 'none'; document.getElementById('und-setup-step-online').style.display = 'none'; document.getElementById('und-setup-step-1').style.display = 'flex'; }
-function und_generateNameInputs() { let count = parseInt(document.getElementById('und-in-players').value); if(count < 3 || count > 10) return alert("Entre 3 et 10 joueurs."); let container = document.getElementById('und-name-inputs'); container.innerHTML = ''; for(let i = 0; i < count; i++) { container.innerHTML += `<input type="text" class="und-input und-player-name-in" value="Joueur ${i+1}">`; } document.getElementById('und-setup-step-2').style.display = 'none'; document.getElementById('und-setup-step-names').style.display = 'flex'; }
-function und_initLocalGame() { let inputs = document.querySelectorAll('.und-player-name-in'); und_state.players = Array.from(inputs).map((inp, i) => ({ id: i.toString(), name: inp.value.trim() || `Joueur ${i+1}`, role: '', isAlive: true })); und_state.isHost = true; let theme = document.getElementById('und-in-theme').value; let useMw = document.getElementById('und-in-mw').checked; und_assignRolesAndWords(theme, useMw); und_state.currentRoleIdx = 0; und_prepareRoleScreen(); }
-function und_hostGame() { try { und_state.mode = 'ONLINE'; und_state.isHost = true; und_state.roomCode = Array.from({length: 4}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random()*26)]).join(''); und_state.myId = 'HOST'; document.getElementById('und-lobby-code').innerText = und_state.roomCode; und_switchScreen('und-scr-lobby'); document.getElementById('und-host-settings').style.display = 'flex'; und_state.players.push({ id: 'HOST', name: document.getElementById('und-in-name').value || 'Hôte', role: '', isAlive: true }); und_updateLobby(); und_state.peer = new Peer('und-' + und_state.roomCode); und_state.peer.on('connection', conn => { conn.on('data', data => und_handleDataHost(data)); und_state.connections.push(conn); }); } catch(e) { alert("Erreur réseau: " + e.message); } }
-function und_joinGame() { und_state.mode = 'ONLINE'; und_state.isHost = false; let code = document.getElementById('und-in-code').value.toUpperCase(); let name = document.getElementById('und-in-name').value || "Joueur"; und_state.myId = und_GEN_ID(); document.getElementById('und-lobby-code').innerText = code; und_switchScreen('und-scr-lobby'); und_state.peer = new Peer(); und_state.peer.on('open', id => { und_state.conn = und_state.peer.connect('und-' + code); und_state.conn.on('open', () => und_state.conn.send({ type: 'JOIN', id: und_state.myId, name: name })); und_state.conn.on('data', data => und_handleDataClient(data)); }); }
-function und_broadcast(data) { if(!und_state.isHost) return; und_state.connections.forEach(c => c.send(data)); und_handleDataClient(data); }
-function und_updateLobby() { document.getElementById('und-lobby-players').innerHTML = und_state.players.map(p => `<div>👤 ${p.name}</div>`).join(''); }
-function und_handleDataHost(data) { if(data.type === 'JOIN') { und_state.players.push({ id: data.id, name: data.name, role: '', isAlive: true }); und_broadcast({ type: 'LOBBY_UPDATE', players: und_state.players }); } if(data.type === 'ELIMINATE') { und_eliminatePlayer(data.targetId); } }
-function und_handleDataClient(data) { if(data.type === 'LOBBY_UPDATE') { und_state.players = data.players; und_updateLobby(); } if(data.type === 'START_GAME') { und_state = { ...und_state, ...data.state }; und_prepareRoleScreen(); } if(data.type === 'UPDATE_GAME') { und_state.players = data.players; und_renderGameGrid(); } if(data.type === 'MW_PHASE') { und_state = { ...und_state, ...data.state }; und_showMrWhitePhase(data.mwName); } if(data.type === 'END_GAME') { und_state = { ...und_state, ...data.state }; und_showResults(data.winner); } }
-function und_startOnlineGame() { let theme = document.getElementById('und-lobby-theme').value; let useMw = document.getElementById('und-lobby-mw').checked; und_assignRolesAndWords(theme, useMw); und_broadcast({ type: 'START_GAME', state: und_state }); }
-function und_assignRolesAndWords(theme, useMw) { let db = theme === 'CLASSIC' ? und_DB_CLASSIC : und_DB_MANGA; let pair = db[Math.floor(Math.random() * db.length)]; let wList = [...pair].sort(() => Math.random() - 0.5); und_state.wordCiv = wList[0]; und_state.wordUnd = wList[1]; let pCount = und_state.players.length; let numUnd = pCount >= 7 ? 2 : 1; let numMw = useMw ? 1 : 0; let numCiv = pCount - numUnd - numMw; let roles = []; for(let i=0; i<numCiv; i++) roles.push('CIV'); for(let i=0; i<numUnd; i++) roles.push('UND'); for(let i=0; i<numMw; i++) roles.push('MW'); roles.sort(() => Math.random() - 0.5); und_state.players.forEach(p => { p.role = roles.pop(); p.isAlive = true; }); }
-function und_prepareRoleScreen() { if(und_state.mode === 'LOCAL') { if(und_state.currentRoleIdx < und_state.players.length) { document.getElementById('und-role-turn-title').innerText = "Au tour de : " + und_state.players[und_state.currentRoleIdx].name; document.getElementById('und-btn-reveal-role').style.display = 'block'; document.getElementById('und-role-display').style.display = 'none'; und_switchScreen('und-scr-roles'); } else { und_startGamePhase(); } } else { document.getElementById('und-role-turn-title').innerText = "TON RÔLE"; document.getElementById('und-btn-reveal-role').style.display = 'block'; document.getElementById('und-role-display').style.display = 'none'; und_switchScreen('und-scr-roles'); } }
-function und_revealRole() { document.getElementById('und-btn-reveal-role').style.display = 'none'; document.getElementById('und-role-display').style.display = 'flex'; let p = und_state.mode === 'LOCAL' ? und_state.players[und_state.currentRoleIdx] : und_state.players.find(x => x.id === und_state.myId); let wordBox = document.getElementById('und-role-word'); let prefix = document.getElementById('und-role-prefix'); if(p.role === 'CIV') { prefix.innerText = "Ton mot secret est :"; wordBox.innerText = und_state.wordCiv; wordBox.style.color = "var(--accent-und)"; } else if (p.role === 'UND') { prefix.innerText = "Ton mot secret est :"; wordBox.innerText = und_state.wordUnd; wordBox.style.color = "var(--accent-und)"; } else { prefix.innerText = "Tu es Mr. White."; wordBox.innerText = "Tu n'as pas de mot."; wordBox.style.color = "var(--bomb-red)"; } }
-function und_nextRole() { if(und_state.mode === 'LOCAL') { und_state.currentRoleIdx++; und_prepareRoleScreen(); } else { und_startGamePhase(); } }
-function und_startGamePhase() { und_switchScreen('und-scr-game'); document.getElementById('und-wait-msg').style.display = (!und_state.isHost && und_state.mode === 'ONLINE') ? 'block' : 'none'; und_renderGameGrid(); }
-function und_renderGameGrid() { let html = ''; und_state.players.forEach(p => { let cl = p.isAlive ? '' : 'dead'; let onclick = (p.isAlive && und_state.isHost) ? `onclick="und_triggerElimination('${p.id}')"` : ''; html += `<div class="und-player-item ${cl}" ${onclick}>${p.name}</div>`; }); document.getElementById('und-player-grid').innerHTML = html; }
-function und_triggerElimination(targetId) { if(!confirm("Éliminer ce joueur ?")) return; if(und_state.mode === 'LOCAL') und_eliminatePlayer(targetId); else und_handleDataHost({type: 'ELIMINATE', targetId: targetId}); }
-function und_eliminatePlayer(targetId) { let p = und_state.players.find(x => x.id === targetId); p.isAlive = false; let roleName = p.role === 'CIV' ? "Civil" : (p.role === 'UND' ? "Undercover" : "Mr. White"); alert(`${p.name} est éliminé ! Il était : ${roleName}`); if(p.role === 'MW') { if(und_state.mode === 'LOCAL') und_showMrWhitePhase(p.name); else und_broadcast({ type: 'MW_PHASE', state: und_state, mwName: p.name }); return; } und_checkWinCondition(); }
-function und_showMrWhitePhase(mwName) { document.getElementById('und-mw-name').innerText = mwName; document.getElementById('und-mw-true-word').innerText = und_state.wordCiv; if(und_state.isHost) { document.getElementById('und-mw-host-controls').style.display = 'block'; document.getElementById('und-mw-wait-msg').style.display = 'none'; } else { document.getElementById('und-mw-host-controls').style.display = 'none'; document.getElementById('und-mw-wait-msg').style.display = 'block'; } und_switchScreen('und-scr-mw'); }
-function und_resolveMrWhite(hasGuessed) { if(hasGuessed) { let winner = "MR. WHITE GAGNE !<br><span style='font-size:1rem'>Il a deviné le mot !</span>"; if(und_state.mode === 'LOCAL') und_showResults(winner); else und_broadcast({ type: 'END_GAME', state: und_state, winner: winner }); } else { alert("Mr. White s'est trompé. Le jeu continue."); und_checkWinCondition(); } }
-function und_checkWinCondition() { let alives = und_state.players.filter(p => p.isAlive); let civs = alives.filter(p => p.role === 'CIV').length; let bads = alives.filter(p => p.role !== 'CIV').length; let winner = null; if(bads === 0) winner = "LES CIVILS GAGNENT !"; else if(bads >= civs) winner = "LES IMPOSTEURS GAGNENT !"; if(winner) { if(und_state.mode === 'LOCAL') und_showResults(winner); else und_broadcast({ type: 'END_GAME', state: und_state, winner: winner }); } else { if(und_state.mode === 'LOCAL') und_startGamePhase(); else und_broadcast({ type: 'UPDATE_GAME', players: und_state.players }); } }
-function und_showResults(winnerText) { document.getElementById('und-res-winner').innerHTML = winnerText; document.getElementById('und-res-word-civ').innerText = und_state.wordCiv; document.getElementById('und-res-word-und').innerText = und_state.wordUnd; let recap = und_state.players.map(p => { let rName = p.role === 'CIV' ? "Civil" : (p.role === 'UND' ? "Undercover" : "Mr. White"); return `<div><b>${p.name}</b> : ${rName}</div>`; }).join(''); document.getElementById('und-res-recap').innerHTML = recap; und_switchScreen('und-scr-result'); }
-<\/script>
-</body>
-</html>
-</textarea>
-
-<script>
-/* ═══════════════════════════════════════════════
-   CONFIGURATION FIREBASE & LOGIQUE PORTAIL
-   ═══════════════════════════════════════════════ */
-const firebaseConfig = {
-  apiKey: "AIzaSyBEiKDARJMM8VPbFrLJBzEC7c2paw2HGUQ",
-  authDomain: "timebomb3-572e0.firebaseapp.com",
-  databaseURL: "https://timebomb3-572e0-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "timebomb3-572e0",
-  storageBucket: "timebomb3-572e0.firebasestorage.app",
-  messagingSenderId: "57545585120",
-  appId: "1:57545585120:web:a13c7c67f4da27f0fefb85"
-};
-
-let db = null;
-try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-} catch(e) {
-    console.error("Firebase non initialisé", e);
-}
-
-let portalState = { currentUser: null, games: [] };
-let editingIndex = -1; // Pour savoir si on édite un jeu existant
-
-// Jeu par défaut
-const defaultUndercoverGame = { 
-    id: 'undercover_default', 
-    title: 'UNDERCOVER', 
-    desc: "Trouvez l'intrus parmi vous en débattant sur un mot secret.", 
-    rules: "Chacun reçoit un mot secret. Les Civils ont tous le même mot. Un joueur a un mot similaire (Undercover) et un autre n'a pas de mot du tout (Mr White). Débattez tour à tour pour éliminer les intrus !",
-    color: '#3b82f6', 
-    code: document.getElementById('default-undercover-code').value 
-};
-
-window.onload = () => { 
-    switchScreen('login-container'); 
-    
-    // Synchro Firebase
-    if(db) {
-        db.ref('portal_games_list').on('value', (snapshot) => {
-            if(snapshot.exists()) {
-                portalState.games = snapshot.val();
-            } else {
-                portalState.games = [defaultUndercoverGame];
-                db.ref('portal_games_list').set(portalState.games);
-            }
-            if(document.getElementById('hub-container').classList.contains('active')) {
-                renderGamesGrid();
-            }
-        });
-    } else {
-        const savedGames = localStorage.getItem('my_portal_games');
-        portalState.games = savedGames ? JSON.parse(savedGames) : [defaultUndercoverGame];
-    }
-};
-
-document.getElementById('add-color').addEventListener('input', function(e) {
-    document.getElementById('color-hex-display').innerText = e.target.value;
-});
-
-function switchScreen(id) {
-    document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0,0);
-}
-
-/* CONNEXION */
-function tryAdminLogin() {
-    const u = document.getElementById('login-user').value.trim();
-    const p = document.getElementById('login-pass').value.trim();
-    if(u === 'nassim' && p === 'nassim') { 
-        portalState.currentUser = 'admin'; 
-        showHubScreen(); 
-    } else { alert("Identifiant ou mot de passe incorrect !"); }
-}
-
-function loginAsGuest() { portalState.currentUser = 'guest'; showHubScreen(); }
-function logout() { portalState.currentUser = null; document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = ''; switchScreen('login-container'); }
-
-/* HUB */
-function showHubScreen() {
-    switchScreen('hub-container');
-    document.getElementById('btn-show-add').style.display = portalState.currentUser === 'admin' ? 'block' : 'none';
-    renderGamesGrid();
-}
-
-function renderGamesGrid() {
-    const grid = document.getElementById('games-grid');
-    grid.innerHTML = '';
-    
-    portalState.games.forEach((game, index) => {
-        let card = document.createElement('div');
-        card.className = 'game-card';
-        card.style.borderColor = game.color;
-        
-        let adminBtns = '';
-        if(portalState.currentUser === 'admin') {
-            adminBtns = `
-                <button class="edit-btn" onclick="editGame(${index}, event)">✏️</button>
-                <button class="delete-btn" onclick="deleteGame(${index}, event)">🗑️</button>
-            `;
-        }
-        
-        card.innerHTML = `
-            ${adminBtns}
-            <button class="btn-info-rules" onclick="openGameRules(${index}, event)">i</button>
-            <div>
-                <div class="game-title" style="color: ${game.color};">${game.title}</div>
-                <div class="game-desc">${game.desc}</div>
-            </div>
-            <button class="play-btn" style="background: ${game.color};" onclick="launchGame(${index})">JOUER</button>
-        `;
-        grid.appendChild(card);
-    });
-}
-
-function openGameRules(index, event) {
-    event.stopPropagation();
-    const game = portalState.games[index];
-    document.getElementById('rules-text').innerHTML = game.rules || "Aucune règle définie pour ce jeu.";
-    document.getElementById('rules-modal').style.display = 'flex';
-}
-function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
-
-function deleteGame(index, event) {
-    event.stopPropagation();
-    if(confirm("Êtes-vous sûr de vouloir supprimer ce jeu ?")) {
-        portalState.games.splice(index, 1);
-        saveStateToDB();
-    }
-}
-
-/* MODIFICATION / AJOUT */
-function editGame(index, event) {
-    event.stopPropagation();
-    editingIndex = index;
-    const game = portalState.games[index];
-    document.getElementById('form-screen-title').innerText = "MODIFIER LE JEU";
-    document.getElementById('add-title').value = game.title || '';
-    document.getElementById('add-desc').value = game.desc || '';
-    document.getElementById('add-rules').value = game.rules || '';
-    document.getElementById('add-color').value = game.color || '#3b82f6';
-    document.getElementById('color-hex-display').innerText = game.color || '#3b82f6';
-    document.getElementById('add-code').value = game.code || '';
-    document.getElementById('add-file').value = '';
-    switchScreen('add-game-container');
-}
-
-function showAddGameScreen() {
-    editingIndex = -1;
-    document.getElementById('form-screen-title').innerText = "NOUVEAU JEU";
-    document.getElementById('add-title').value = ''; 
-    document.getElementById('add-desc').value = '';
-    document.getElementById('add-rules').value = ''; 
-    document.getElementById('add-color').value = '#3b82f6'; 
-    document.getElementById('color-hex-display').innerText = '#3b82f6';
-    document.getElementById('add-code').value = ''; 
-    document.getElementById('add-file').value = '';
-    switchScreen('add-game-container');
-}
-
-function handleFileUpload(event) {
-    const file = event.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) { document.getElementById('add-code').value = e.target.result; };
-    reader.onerror = function() { alert("Erreur lors de la lecture du fichier."); };
-    reader.readAsText(file);
-}
-
-function saveGame() {
-    const title = document.getElementById('add-title').value.trim(); 
-    const desc = document.getElementById('add-desc').value.trim();
-    const rules = document.getElementById('add-rules').value.trim(); 
-    const color = document.getElementById('add-color').value.trim(); 
-    const code = document.getElementById('add-code').value.trim();
-    
-    if(!title || !code) return alert("Le titre et le code HTML sont obligatoires.");
-
-    if (editingIndex >= 0) {
-        portalState.games[editingIndex].title = title;
-        portalState.games[editingIndex].desc = desc;
-        portalState.games[editingIndex].rules = rules;
-        portalState.games[editingIndex].color = color;
-        portalState.games[editingIndex].code = code;
-    } else {
-        portalState.games.push({ 
-            id: 'game_' + Math.random().toString(36).substr(2, 9), 
-            title: title, desc: desc, rules: rules, color: color, code: code 
-        });
-    }
-    
-    saveStateToDB();
-    alert("Sauvegardé avec succès !"); 
-    showHubScreen();
-}
-
-function saveStateToDB() {
-    if(db) db.ref('portal_games_list').set(portalState.games);
-    else localStorage.setItem('my_portal_games', JSON.stringify(portalState.games));
-    renderGamesGrid();
-}
-
-/* LECTEUR IFRAME */
-function launchGame(index) {
-    const game = portalState.games[index];
-    document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
-    document.getElementById('game-player-container').style.display = 'block';
-    document.getElementById('global-home-btn').style.display = 'flex';
-    document.getElementById('game-iframe').srcdoc = game.code;
-}
-
-function closeGame() {
-    if(confirm("Quitter ce jeu et retourner au menu ?")) {
-        document.getElementById('game-player-container').style.display = 'none';
-        document.getElementById('global-home-btn').style.display = 'none';
-        document.getElementById('game-iframe').srcdoc = '';
-        showHubScreen();
-    }
-}
-</script>
-</body>
-</html>
+        <label>Importer le fichier HTML</label><input type="file" id="add-file" accept=".html" class="portal-input" onchange="handleFileUpload(event)">
+        <label>OU modifiez le code manuellemen
