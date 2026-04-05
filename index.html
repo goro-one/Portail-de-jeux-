@@ -203,6 +203,7 @@ function playSound(type) {
     <button id="btn-add-game" class="portal-btn btn-add" style="display: none;" onclick="showAddScreen('games')">+ AJOUTER UN JEU</button>
     <div class="items-grid" id="games-grid"></div>
 </div>
+
 <div class="screen-container" id="quiz-container">
     <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
     <div class="filters-bar">
@@ -226,8 +227,7 @@ function playSound(type) {
             <input type="range" id="filter-players-quiz" min="0" max="15" value="0" oninput="updateGaugeLabel('quiz', this.value); renderGrid('quiz');">
         </div>
     </div>
-
-    <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
+       <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
     <div class="items-grid" id="quiz-grid"></div>
 </div>
 
@@ -418,8 +418,7 @@ window.onload = () => {
         localStorage.setItem('portal_offline_games', JSON.stringify(portalState.games));
         if(portalState.currentTab === 'games') renderGrid('games');
     });
-
-    db.ref('portal_quiz_list').on('value', (snap) => {
+       db.ref('portal_quiz_list').on('value', (snap) => {
         let val = snap.val();
         if(val) {
             portalState.quiz = (Array.isArray(val) ? val : Object.values(val)).filter(x => x !== null && typeof x === 'object');
@@ -519,7 +518,7 @@ function setupUserSession(userData) {
         document.getElementById('prof-stat-played').innerText = d.played || 0;
         updateQuestsUI(d.quests || {});
     });
-        
+    
     document.getElementById('login-container').classList.remove('active');
     document.getElementById('bottom-nav').classList.add('active');
     switchTab('games');
@@ -619,8 +618,7 @@ function renderGrid(type) {
         if(sortVal === 'name-desc') return nB.localeCompare(nA);
         return 0;
     });
-    
-    list.forEach(item => {
+        list.forEach(item => {
         let liveCount = portalState.presence[item.id] ? Object.keys(portalState.presence[item.id]).length : 0;
         let liveHtml = liveCount > 0 ? `<div class="live-counter">🔥 ${liveCount} Joueur(s) en ligne</div>` : '';
 
@@ -783,7 +781,8 @@ function renderStars(val) {
     spans.forEach((span, index) => {
         span.className = index < val ? 'active' : '';
     });
-                       }
+}
+
 function rateGame(val) {
     if(!portalState.currentUser) return alert("Connectez-vous pour noter !");
     playSound('click');
@@ -873,9 +872,8 @@ function toggleVoiceChat() {
             alert("Accès au microphone refusé ou impossible.");
         });
     }
-}
-
-function sendChatMessage() {
+   }
+   function sendChatMessage() {
     let input = document.getElementById('chat-input'); let text = input.value.trim();
     if(!text || !portalState.currentUser) return;
     playSound('click');
@@ -947,3 +945,6 @@ function checkAchievements() {
 </script>
 </body>
 </html>
+
+   
+    
