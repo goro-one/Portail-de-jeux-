@@ -76,6 +76,7 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 .item-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;}
 .play-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; color: white; font-family: 'Bungee'; box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition:0.2s;}
 .play-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent;}
+
 /* Boutons Flottants sur Carte */
 .info-btn { position: absolute; top: -15px; left: -15px; background: #1e293b; border: 2px solid #fff; color: #fff; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
 .info-btn:hover { transform: scale(1.1); background: #334155;}
@@ -136,16 +137,6 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
 </style>
 </head>
 <body>
-<script>
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSound(type) {
-    if(!portalState.settings.sound) return;
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    if(type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
-    if(type === 'success') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
-}
-</script>
 
 <button id="global-home-btn" onclick="closeGame()">✖</button>
 <button id="global-rules-btn" onclick="showGlobalRules()">i</button>
@@ -154,10 +145,14 @@ function playSound(type) {
     <div id="login-box">
         <h1 class="portal-title">LE PORTAIL</h1>
         <p style="margin-bottom: 20px; color: var(--text-muted); font-size:0.9rem;">Connexion à la plateforme</p>
+        
         <button class="portal-btn btn-google" onclick="loginGoogle()">S'IDENTIFIER AVEC GOOGLE</button>
+        
         <div style="margin: 25px 0; border-top: 1px solid var(--panel-border);"></div>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom:10px;">Accès rapide ou invité :</p>
+        
         <button class="portal-btn btn-guest" style="margin-bottom:20px;" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+
         <div style="border-top: 1px dashed var(--panel-border); padding-top: 15px;">
             <input type="text" id="login-user" class="portal-input" placeholder="Identifiant (Admin Local)">
             <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
@@ -168,6 +163,7 @@ function playSound(type) {
 
 <div class="screen-container" id="games-container">
     <h2 class="portal-subtitle">🕹️ LES JEUX</h2>
+    
     <div class="filters-bar">
         <input type="text" id="search-games" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('games')">
         <select id="sort-games" class="filter-input" onchange="renderGrid('games')">
@@ -179,17 +175,20 @@ function playSound(type) {
             <option value="4">4 Joueurs</option><option value="6">6 Joueurs</option><option value="8">8+ Joueurs</option>
         </select>
     </div>
+
     <button id="btn-add-game" class="portal-btn btn-add" style="display: none;" onclick="showAddScreen('games')">+ AJOUTER UN JEU</button>
     <div class="items-grid" id="games-grid"></div>
 </div>
 
 <div class="screen-container" id="quiz-container">
     <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
+    
     <div class="filters-bar">
         <input type="text" id="search-quiz" class="filter-input" placeholder="Rechercher par nom ou tag..." onkeyup="renderGrid('quiz')">
         <select id="sort-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="date-desc">Récent d'abord</option><option value="fav">Mes Favoris ❤️</option><option value="name-asc">Nom (A-Z)</option></select>
         <select id="filter-players-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="all">Nb Joueurs : Tous</option><option value="2">2 Joueurs</option><option value="4">4 Joueurs</option></select>
     </div>
+
     <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981; box-shadow:0 4px 0 #047857;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
     <div class="items-grid" id="quiz-grid"></div>
 </div>
@@ -207,44 +206,56 @@ function playSound(type) {
 
 <div class="screen-container" id="profile-container">
     <h2 class="portal-subtitle" style="color:#ec4899;">👤 MON PROFIL</h2>
+    
     <div class="profile-card">
         <div class="avatar-select" id="prof-avatar" onclick="changeAvatar()">👽</div>
         <h3 id="prof-name" style="font-family:'Bungee'; margin-bottom:5px; font-size:1.5rem;">Joueur</h3>
+        
         <button class="portal-btn btn-secondary" style="margin: 10px auto 20px auto; padding: 8px; width:auto; font-size:0.8rem;" onclick="editProfileName()">✏️ CHANGER DE NOM</button>
+        
         <div style="text-align:left; font-size:0.9rem; color:var(--text-muted); margin-bottom:20px; line-height:1.5;">
             Statut : <span class="status-dot"></span> En ligne<br>
             Rôle : <b id="prof-role">Joueur</b><br>
             Jeux joués : <b id="prof-stat-played">0</b>
         </div>
+        
         <div style="border-top:1px dashed var(--panel-border); padding-top:15px; display:flex; flex-direction:column; gap:10px;">
             <button class="portal-btn btn-secondary" onclick="toggleTheme()">🌓 MODE SOMBRE / CLAIR</button>
             <button class="portal-btn btn-secondary" onclick="toggleSound()">🔊 ACTIVER/DÉSACTIVER LE SON</button>
         </div>
     </div>
+    
     <div id="admin-tools" style="display:none; width:100%; max-width:400px;">
         <h3 style="margin-bottom:10px; color:#ef4444; font-family:'Bungee'; text-align:center;">🛠️ OUTILS ADMIN</h3>
         <button class="portal-btn btn-cancel" onclick="exportData()">💾 EXPORTER LA BDD (JSON)</button>
     </div>
+
     <button class="portal-btn btn-cancel" style="max-width: 200px; margin-top: 30px;" onclick="logout()">DÉCONNEXION</button>
 </div>
+
 <div class="screen-container" id="add-item-container">
     <h1 class="portal-title" id="add-title-main">NOUVEL AJOUT</h1>
     <div id="add-box">
         <label>Titre</label><input type="text" id="add-title" class="portal-input" placeholder="Ex: Spyfall">
         <label>Description courte</label><input type="text" id="add-desc" class="portal-input" placeholder="Ex: Trouvez l'espion.">
         <label>Tags (séparés par virgule)</label><input type="text" id="add-tags" class="portal-input" placeholder="Ex: Bluff, Cartes, Rapide">
+        
         <div class="form-row">
             <div style="flex:1;"><label>Min Joueurs</label><input type="number" id="add-min-p" class="portal-input" value="3" min="1"></div>
             <div style="flex:1;"><label>Max Joueurs</label><input type="number" id="add-max-p" class="portal-input" value="8" min="2"></div>
         </div>
+
         <label>Règles du jeu</label><textarea id="add-rules" class="portal-input" placeholder="Ex: But du jeu..."></textarea>
         <label>Couleur du thème</label>
         <div class="color-picker-wrap">
             <input type="color" id="add-color" value="#3b82f6"><span id="color-hex-display" style="font-family: monospace;">#3b82f6</span>
         </div>
+        
         <div style="margin: 20px 0; border-top: 1px dashed var(--panel-border);"></div>
+
         <label>Importer le fichier HTML</label><input type="file" id="add-file" accept=".html" class="portal-input" onchange="handleFileUpload(event)">
         <label>OU modifiez le code manuellement :</label><textarea id="add-code" class="portal-input portal-code" placeholder="Le code apparaîtra ici..."></textarea>
+        
         <button class="portal-btn btn-admin" style="margin-top:20px;" onclick="saveNewItem()">ENREGISTRER</button>
         <button class="portal-btn btn-cancel" onclick="cancelAdd()">ANNULER</button>
     </div>
@@ -267,6 +278,7 @@ function playSound(type) {
         <h2 style="font-family:'Bungee'; margin-bottom:15px; color:var(--accent);">REJOINDRE LA PARTIE</h2>
         <div id="qrcode"></div>
         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">Scannez pour rejoindre via le portail !</p>
+        
         <button class="portal-btn btn-admin" onclick="confirmLaunch(false)">🎮 JOUER</button>
         <button class="portal-btn btn-secondary" onclick="confirmLaunch(true)">👁️ REJOINDRE COMME SPECTATEUR</button>
         <button class="portal-btn btn-cancel" style="margin-top:20px;" onclick="document.getElementById('play-modal').style.display='none'">ANNULER</button>
@@ -283,12 +295,23 @@ function playSound(type) {
 <textarea id="default-undercover-code" style="display:none;">
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Undercover</title><style>body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:50px;}h1{color:#3b82f6;}</style></head><body><h1>UNDERCOVER</h1><p>Insérez votre code de jeu ici via l'éditeur du portail !</p></body></html>
 </textarea>
-
 <script>
+/* ═══════════════════════════════════════════════
+   PWA & CONFIGURATION FIREBASE
+   ═══════════════════════════════════════════════ */
 if ('serviceWorker' in navigator) {
     const swCode = `self.addEventListener('fetch', function(e){});`;
     const blob = new Blob([swCode], {type: 'application/javascript'});
     navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if(!portalState.settings.sound) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type === 'click') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+    if(type === 'success') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, audioCtx.currentTime); osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3); }
 }
 
 const firebaseConfig = {
@@ -366,6 +389,7 @@ function loginGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(err => { alert("Erreur Google Auth: " + err.message); });
 }
+
 function tryLocalLogin() {
     playSound('click');
     const u = document.getElementById('login-user').value.trim();
@@ -400,7 +424,6 @@ function setupUserSession(userData) {
     document.getElementById('bottom-nav').classList.add('active');
     switchTab('games');
 }
-
 function editProfileName() {
     playSound('click');
     let newName = prompt("Entrez votre nouveau nom :", portalState.currentUser.name);
@@ -507,9 +530,8 @@ function deleteItem(itemId, type, event) {
         if(type === 'games') { portalState.games = portalState.games.filter(g => g.id !== itemId); db.ref('portal_games_list').set(portalState.games); } 
         else { portalState.quiz = portalState.quiz.filter(q => q.id !== itemId); db.ref('portal_quiz_list').set(portalState.quiz); }
     }
-}
-
-function editItem(itemId, type, event) {
+           }
+      function editItem(itemId, type, event) {
     event.stopPropagation(); playSound('click');
     portalState.addingType = type; portalState.editingItemId = itemId;
     let list = type === 'games' ? portalState.games : portalState.quiz;
