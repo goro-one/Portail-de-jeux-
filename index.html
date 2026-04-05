@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1e293b">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Portail des Jeux Ultimate</title>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -13,25 +15,47 @@
 
 <style>
 /* ═══════════════════════════════════════════════
-   STYLES DU PORTAIL GLOBAL
+   STYLES DU PORTAIL GLOBAL (DARK / LIGHT THEME)
    ═══════════════════════════════════════════════ */
-:root { --bg-main: #111; --bg-screen: linear-gradient(135deg, #1e1e2f, #000); --panel-bg: #1e293b; --panel-border: #334155; --text-main: #fff; --text-muted: #94a3b8; --input-bg: #0f172a; --input-border: #475569; --accent: #3b82f6; --accent-hover: #2563eb; --btn-text: #fff; --btn-sec-bg: #475569; --btn-sec-shadow: #334155; --btn-sec-text: #ffffff; }
-body.light-mode { --bg-main: #f8fafc; --bg-screen: linear-gradient(135deg, #f1f5f9, #e2e8f0); --panel-bg: #ffffff; --panel-border: #cbd5e1; --text-main: #0f172a; --text-muted: #64748b; --input-bg: #f8fafc; --input-border: #94a3b8; --accent: #0ea5e9; --accent-hover: #0284c7; --btn-text: #fff; --btn-sec-bg: #e2e8f0; --btn-sec-shadow: #cbd5e1; --btn-sec-text: #0f172a; }
+:root {
+    --bg-main: #111; --bg-screen: linear-gradient(135deg, #1e1e2f, #000);
+    --panel-bg: #1e293b; --panel-border: #334155;
+    --text-main: #fff; --text-muted: #94a3b8;
+    --input-bg: #0f172a; --input-border: #475569;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --btn-text: #fff;
+    --btn-sec-bg: #475569; --btn-sec-shadow: #334155; --btn-sec-text: #ffffff;
+}
+
+body.light-mode {
+    --bg-main: #f8fafc; --bg-screen: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    --panel-bg: #ffffff; --panel-border: #cbd5e1;
+    --text-main: #0f172a; --text-muted: #64748b;
+    --input-bg: #f8fafc; --input-border: #94a3b8;
+    --accent: #0ea5e9; --accent-hover: #0284c7;
+    --btn-text: #fff;
+    --btn-sec-bg: #e2e8f0; --btn-sec-shadow: #cbd5e1; --btn-sec-text: #0f172a;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
 
+/* Conteneurs Principaux */
 .screen-container { display: none; height: 100vh; width: 100%; position: relative; overflow-y: auto; background: var(--bg-screen); padding-bottom: 120px; padding-top: 20px;}
 .screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+
+/* Écran Login */
+#login-container { justify-content: center; padding-bottom: 20px; }
 .panel { background: var(--panel-bg); padding: 30px; border-radius: 15px; text-align: center; border: 2px solid var(--panel-border); width: 90%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
 
-#login-container { justify-content: center; padding-bottom: 20px; }
 .portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 10px; color: var(--text-main); }
 .portal-subtitle { font-family: 'Bungee', sans-serif; font-size: 1.5rem; text-align: center; margin-bottom: 15px; color: var(--accent); }
+
 .portal-input { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 10px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size: 1rem; text-align: center; transition: 0.2s;}
 .portal-input:focus { border-color: var(--accent); outline: none; }
-
 .portal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 0.9rem; cursor: pointer; transition: 0.2s; color: var(--btn-text); margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:10px;}
 .portal-btn:active { transform: translateY(2px); }
+
 .btn-admin { background: var(--accent); box-shadow: 0 4px 0 var(--accent-hover); color: white !important;}
 .btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 10px; color: white !important;}
 .btn-google { background: #ea4335; box-shadow: 0 4px 0 #b91c1c; color: white !important;}
@@ -41,10 +65,9 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 
 /* Filtres et Jauge */
 .filters-bar { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 800px; padding: 15px; background: var(--panel-bg); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--panel-border);}
-.filter-input { flex: 1; min-width: 140px; padding: 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size:0.9rem;}
-.gauge-container { flex: 1; min-width: 200px; width:100%; text-align: center; color: var(--text-main); font-size: 0.9rem; display: flex; flex-direction: column; justify-content: center; margin-top: 5px; }
+.filter-input { flex: 1; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size:0.9rem;}
+.gauge-container { flex: 1; min-width: 200px; text-align: center; color: var(--text-main); font-size: 0.9rem; display: flex; flex-direction: column; justify-content: center; }
 .gauge-container input[type=range] { width: 100%; margin-top: 5px; accent-color: var(--accent); }
-
 /* Cartes (Jeux/Quiz) */
 .items-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding: 10px;}
 .item-card { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; width: 280px; padding: 25px 20px 15px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative; margin-top: 15px;}
@@ -90,6 +113,7 @@ body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend
 .chat-input-area { display: flex; border-top: 2px solid var(--panel-border); }
 .chat-input-area input { flex: 1; border: none; padding: 15px; background: var(--input-bg); color: var(--text-main); outline: none; font-family:'Lexend';}
 .chat-input-area button { background: var(--accent); border: none; color: white; padding: 0 20px; cursor: pointer; font-family: 'Bungee'; }
+.del-msg-btn { background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; cursor: pointer; margin-left: 10px;}
 
 .friends-list { display:flex; gap:10px; padding:10px; overflow-x:auto; background:var(--panel-bg); border-radius:10px; width:100%; max-width:600px; margin-bottom:15px; border:1px solid var(--panel-border);}
 .friend-item { background:var(--input-bg); padding:5px 10px; border-radius:20px; font-size:0.8rem; white-space:nowrap; border:1px solid var(--accent); cursor:pointer;}
@@ -148,7 +172,6 @@ function playSound(type) {
     } catch(e) {}
 }
 </script>
-
 <button id="global-home-btn" onclick="closeGame()">✖</button>
 <button id="global-voice-btn" onclick="toggleVoiceChat()">🎤 VOCAL</button>
 
@@ -177,14 +200,6 @@ function playSound(type) {
     
     <div class="filters-bar">
         <input type="text" id="search-games" class="filter-input" placeholder="Rechercher par nom..." onkeyup="renderGrid('games')">
-        
-        <select id="sort-games" class="filter-input" onchange="renderGrid('games')">
-            <option value="date-desc">Récent d'abord</option>
-            <option value="fav">Mes Favoris ❤️</option>
-            <option value="name-asc">Nom (A-Z)</option>
-            <option value="name-desc">Nom (Z-A)</option>
-        </select>
-
         <select id="category-games" class="filter-input" onchange="renderGrid('games')">
             <option value="all">Toutes Catégories</option>
             <option value="Ambiance">Ambiance</option>
@@ -208,13 +223,6 @@ function playSound(type) {
     <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
     <div class="filters-bar">
         <input type="text" id="search-quiz" class="filter-input" placeholder="Rechercher par nom..." onkeyup="renderGrid('quiz')">
-        
-        <select id="sort-quiz" class="filter-input" onchange="renderGrid('quiz')">
-            <option value="date-desc">Récent d'abord</option>
-            <option value="fav">Mes Favoris ❤️</option>
-            <option value="name-asc">Nom (A-Z)</option>
-        </select>
-
         <select id="category-quiz" class="filter-input" onchange="renderGrid('quiz')">
             <option value="all">Toutes Catégories</option>
             <option value="Culture">Culture Générale</option>
@@ -227,7 +235,8 @@ function playSound(type) {
             <input type="range" id="filter-players-quiz" min="0" max="15" value="0" oninput="updateGaugeLabel('quiz', this.value); renderGrid('quiz');">
         </div>
     </div>
-       <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
+
+    <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
     <div class="items-grid" id="quiz-grid"></div>
 </div>
 
@@ -318,7 +327,6 @@ function playSound(type) {
         <button class="portal-btn btn-cancel" onclick="cancelAdd()">ANNULER</button>
     </div>
 </div>
-
 <div id="game-player-container">
     <iframe id="game-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
@@ -363,6 +371,10 @@ function playSound(type) {
     <button class="nav-btn" id="nav-chat" onclick="switchTab('chat')">💬<br><span>TCHAT</span></button>
     <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">👤<br><span>PROFIL</span></button>
 </div>
+
+<textarea id="default-undercover-code" style="display:none;">
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Undercover</title><style>body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:50px;}h1{color:#3b82f6;}</style></head><body><h1>UNDERCOVER</h1><p>Insérez votre code de jeu ici via l'éditeur du portail !</p></body></html>
+</textarea>
 
 <script>
 try { if ('serviceWorker' in navigator) { const blob = new Blob(["self.addEventListener('fetch', function(e){});"], {type: 'application/javascript'}); navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{}); } } catch(e) {}
@@ -418,7 +430,8 @@ window.onload = () => {
         localStorage.setItem('portal_offline_games', JSON.stringify(portalState.games));
         if(portalState.currentTab === 'games') renderGrid('games');
     });
-       db.ref('portal_quiz_list').on('value', (snap) => {
+
+    db.ref('portal_quiz_list').on('value', (snap) => {
         let val = snap.val();
         if(val) {
             portalState.quiz = (Array.isArray(val) ? val : Object.values(val)).filter(x => x !== null && typeof x === 'object');
@@ -476,7 +489,6 @@ function loginGoogle() {
     playSound('click');
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => { alert("Erreur Google Auth"); });
 }
-
 function tryLocalLogin() {
     playSound('click');
     const u = document.getElementById('login-user').value.trim();
@@ -590,7 +602,6 @@ function renderGrid(type) {
     
     let searchVal = document.getElementById('search-' + type).value.trim().toLowerCase();
     
-    // SAFE FALLBACK: Si le select 'sort' n'est pas trouvé (pour être 100% sûr), on met une valeur par défaut
     let sortNode = document.getElementById('sort-' + type);
     let sortVal = sortNode ? sortNode.value : 'date-desc';
 
@@ -618,7 +629,8 @@ function renderGrid(type) {
         if(sortVal === 'name-desc') return nB.localeCompare(nA);
         return 0;
     });
-        list.forEach(item => {
+    
+    list.forEach(item => {
         let liveCount = portalState.presence[item.id] ? Object.keys(portalState.presence[item.id]).length : 0;
         let liveHtml = liveCount > 0 ? `<div class="live-counter">🔥 ${liveCount} Joueur(s) en ligne</div>` : '';
 
@@ -865,6 +877,12 @@ function toggleVoiceChat() {
     } else {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             portalState.voiceStream = stream;
+            btn.innerText = '🔊  VOCAL';
+        btn.style.background = '#3b82f6';
+        playSound('click');
+    } else {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            portalState.voiceStream = stream;
             btn.innerText = '🔊 VOCAL ON';
             btn.style.background = '#10b981';
             playSound('success');
@@ -872,8 +890,9 @@ function toggleVoiceChat() {
             alert("Accès au microphone refusé ou impossible.");
         });
     }
-   }
-   function sendChatMessage() {
+}
+
+function sendChatMessage() {
     let input = document.getElementById('chat-input'); let text = input.value.trim();
     if(!text || !portalState.currentUser) return;
     playSound('click');
@@ -945,6 +964,3 @@ function checkAchievements() {
 </script>
 </body>
 </html>
-
-   
-    
