@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e293b">
+<title>Portail Ultimate 10.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root { --bg-main: #111; --bg-screen: linear-gradient(135deg, #1e1e2f, #000); --panel-bg: #1e293b; --panel-border: #334155; --text-main: #fff; --text-muted: #94a3b8; --input-bg: #0f172a; --input-border: #475569; --accent: #3b82f6; --accent-hover: #2563eb; --btn-text: #fff; --btn-sec-bg: #475569; --btn-sec-shadow: #334155; --btn-sec-text: #ffffff; }
+body.light-mode { --bg-main: #f8fafc; --bg-screen: linear-gradient(135deg, #f1f5f9, #e2e8f0); --panel-bg: #ffffff; --panel-border: #cbd5e1; --text-main: #0f172a; --text-muted: #64748b; --input-bg: #f8fafc; --input-border: #94a3b8; --accent: #0ea5e9; --accent-hover: #0284c7; --btn-text: #fff; --btn-sec-bg: #e2e8f0; --btn-sec-shadow: #cbd5e1; --btn-sec-text: #0f172a; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg-main); color: var(--text-main); font-family: 'Lexend', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
+.screen-container { display: none; height: 100vh; width: 100%; position: relative; overflow-y: auto; background: var(--bg-screen); padding-bottom: 120px; padding-top: 20px;}
+.screen-container.active { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+.panel { background: var(--panel-bg); padding: 25px; border-radius: 15px; text-align: center; border: 2px solid var(--panel-border); width: 90%; max-width: 400px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+#login-container { justify-content: center; padding-bottom: 20px; }
+.portal-title { font-family: 'Bungee', sans-serif; font-size: 2.5rem; text-align: center; margin-bottom: 10px; color: var(--text-main); }
+.portal-subtitle { font-family: 'Bungee', sans-serif; font-size: 1.5rem; text-align: center; margin-bottom: 15px; color: var(--accent); }
+.portal-input { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 10px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size: 1rem; text-align: center; transition: 0.2s;}
+.portal-input:focus { border-color: var(--accent); outline: none; }
+.portal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-family: 'Bungee'; font-size: 0.9rem; cursor: pointer; transition: 0.2s; color: var(--btn-text); margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:10px;}
+.portal-btn:active { transform: translateY(2px); }
+.btn-admin { background: var(--accent); box-shadow: 0 4px 0 var(--accent-hover); color: white !important;}
+.btn-guest { background: #10b981; box-shadow: 0 4px 0 #047857; margin-top: 10px; color: white !important;}
+.btn-google { background: #ea4335; box-shadow: 0 4px 0 #b91c1c; margin-bottom: 20px; color: white !important;}
+.btn-add { background: #f59e0b; box-shadow: 0 4px 0 #b45309; max-width: 300px; margin-bottom: 20px; color: white !important;}
+.btn-cancel { background: #ef4444; box-shadow: 0 4px 0 #b91c1c; color: white !important;}
+.btn-secondary { background: var(--btn-sec-bg) !important; color: var(--btn-sec-text) !important; box-shadow: 0 4px 0 var(--btn-sec-shadow) !important; }
+.btn-share { background: #10b981; box-shadow: 0 4px 0 #047857; color: white !important;}
+.filters-bar { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 800px; padding: 15px; background: var(--panel-bg); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--panel-border);}
+.filter-input { flex: 1; min-width: 140px; padding: 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Lexend'; font-size:0.85rem;}
+.gauge-container { flex: 1; min-width: 200px; width:100%; text-align: center; color: var(--text-main); font-size: 0.9rem; display: flex; flex-direction: column; justify-content: center; margin-top: 5px; }
+.gauge-container input[type=range] { width: 100%; margin-top: 5px; accent-color: var(--accent); }
+.items-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; padding: 10px;}
+.item-card { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; width: 280px; padding: 25px 20px 15px 20px; text-align: center; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; position: relative; margin-top: 15px;}
+.item-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.item-title { font-family: 'Bungee', sans-serif; font-size: 1.4rem; margin-bottom: 5px; display:flex; justify-content:center; align-items:center; gap:8px;}
+.item-categories { font-size: 0.75rem; color: var(--accent); margin-bottom: 10px; font-weight: bold; text-transform: uppercase;}
+.item-players { font-size: 0.8rem; color: var(--text-main); font-weight:bold; margin-bottom: 10px; background:var(--input-bg); padding:4px; border-radius:4px; border:1px solid var(--panel-border);}
+.item-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4;}
+.live-counter { font-size: 0.8rem; color: #ef4444; font-weight: bold; margin-bottom: 10px; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+.play-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; color: white; font-family: 'Bungee'; box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition:0.2s;}
+.play-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent;}
+
+/* Pastille de notation et boutons */
+.rating-pill { position: absolute; top: -12px; left: 10px; background: var(--panel-bg); border: 2px solid #eab308; color: #eab308; padding: 4px 10px; border-radius: 20px; font-family: 'Bungee'; font-size: 0.8rem; cursor: pointer; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.2s;}
+.rating-pill:hover { transform: scale(1.1); }
+
+.card-actions-right { position: absolute; top: -12px; right: 10px; display: flex; gap: 5px; flex-direction: row-reverse; z-index: 10; }
+.action-btn { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; color: #fff; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s; }
+.action-btn:hover { transform: scale(1.1); }
+.btn-i { background: #1e293b; } .btn-del { background: #ef4444; } .btn-ed { background: #3b82f6; } .btn-sh { background: #10b981; }
+.fav-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.3; transition: 0.2s; filter: grayscale(100%);}
+.fav-icon.active { opacity: 1; filter: grayscale(0%); text-shadow: 0 0 5px #ef4444;}
+
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--input-bg); border-top: 2px solid var(--panel-border); display: none; z-index: 100; overflow-x: auto; white-space: nowrap; justify-content: flex-start;}
+.bottom-nav::-webkit-scrollbar { display: none; }
+.bottom-nav.active { display: flex; }
+.nav-btn { flex: 1; min-width: 65px; border: none; background: transparent; color: var(--text-muted); font-family: 'Bungee'; font-size: 1.2rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-direction:column; position:relative;}
+.nav-btn span { font-size:0.5rem; font-family:'Lexend'; margin-top:2px;}
+.nav-btn.active { color: var(--accent); background: var(--panel-bg); border-top: 3px solid var(--accent);}
+
+.chat-box { width: 100%; max-width: 600px; height: 50vh; background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; margin-bottom:15px;}
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { background: var(--input-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--input-border); width: fit-content; max-width: 80%; text-align: left; }
+.chat-msg.me { align-self: flex-end; background: var(--accent); color: white; border-color: var(--accent-hover); }
+.chat-header { font-size: 0.75rem; font-weight: bold; margin-bottom: 3px; display:flex; justify-content:space-between; gap:10px;}
+.chat-avatar-link { cursor: pointer; transition: 0.2s; color:var(--text-main); text-decoration:underline; } .chat-avatar-link:hover { opacity: 0.7; color:var(--accent); }
+.chat-input-area { display: flex; border-top: 2px solid var(--panel-border); }
+.chat-input-area input { flex: 1; border: none; padding: 15px; background: var(--input-bg); color: var(--text-main); outline: none; font-family:'Lexend';}
+.chat-input-area button { background: var(--accent); border: none; color: white; padding: 0 20px; cursor: pointer; font-family: 'Bungee'; }
+
+.friends-list { display:flex; flex-direction:column; gap:5px; padding:10px; overflow-y:auto; background:var(--input-bg); border-radius:10px; width:100%; max-height:200px; border:1px solid var(--panel-border); font-size:0.85rem;}
+.friend-item { display:flex; justify-content:space-between; align-items:center; background:var(--panel-bg); padding:8px 10px; border-radius:8px; border:1px solid var(--panel-border); cursor:pointer;}
+.friend-item:hover { border-color:var(--accent); }
+.avatar-select { font-size: 3rem; cursor: pointer; margin-bottom: 10px; display:inline-block; border: 2px dashed transparent; padding:10px; border-radius:50%; transition:0.2s;}
+.avatar-select:hover { border-color: var(--accent); }
+.status-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-left:5px;} .status-dot.online { background:#10b981; } .status-dot.offline { background:#ef4444; }
+.social-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px; text-align: left; }
+.quest-box { background: var(--input-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--panel-border); font-size: 0.85rem;}
+.leader-item { display: flex; justify-content: space-between; align-items:center; padding: 8px 0; border-bottom: 1px dashed var(--panel-border); }
+
+/* CONTENEUR DE JEU & BOUTONS GLOBAUX */
+#game-player-container { display: none; position: fixed; inset: 0; background: var(--bg-main); z-index: 500; }
+#game-iframe { width: 100%; height: 100%; border: none; background: transparent;}
+
+#global-home-btn { position: fixed; top: 15px; left: 15px; height: 45px; border-radius: 8px; background: #ef4444; border: 2px solid #fff; color: white; font-size: 1rem; padding: 0 15px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
+#global-home-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent; }
+
+#spectator-info { position: fixed; top: 15px; right: 15px; height: 45px; background: rgba(0,0,0,0.8); color: #fff; padding: 0 15px; border-radius: 8px; z-index: 9999; display: none; align-items: center; gap: 8px; font-family: 'Bungee'; border: 2px solid var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+
+#global-voice-btn { position: fixed; bottom: 20px; right: 15px; height: 45px; padding: 0 15px; border-radius: 8px; background: #3b82f6; border: 2px solid #fff; color: white; font-size: 0.9rem; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; font-family: 'Bungee'; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
+#global-voice-btn:active { transform: translateY(2px); box-shadow: 0 0 0 transparent; }
+
+/* QR CODE FLOTTANT AU-DESSUS DU JEU */
+#lobby-qr-box { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #fff; padding: 10px 15px; border-radius: 12px; z-index: 9999; display: none; flex-direction: column; align-items: center; border: 3px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.5);}
+
+/* EMOTES SYSTEM */
+#spectator-emotes-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 30px; z-index: 9999; border: 2px solid var(--accent); backdrop-filter: blur(5px);}
+.emote-btn { font-size: 2rem; background: transparent; border: none; cursor: pointer; transition: 0.2s; outline:none;}
+.emote-btn:active { transform: scale(1.3); }
+.floating-emote { position: fixed; bottom: 120px; left: 50%; margin-left: -20px; font-size: 3rem; z-index: 10000; animation: floatUp 2s forwards ease-out; pointer-events: none; }
+@keyframes floatUp { 0% { transform: translateY(0) scale(0.5); opacity: 1; } 100% { transform: translateY(-300px) scale(1.5) rotate(15deg); opacity: 0; } }
+
+/* MODALS */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px);}
+.rules-box { background: var(--panel-bg); padding: 20px; border-radius: 12px; max-width: 500px; width: 100%; text-align: left; border: 2px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: var(--text-main); max-height: 85vh; overflow-y: auto;}
+
+/* AVIS ET ETOILES */
+.star-rating { font-size: 1.8rem; color: #475569; cursor: pointer; display: flex; justify-content: center; gap: 5px; margin: 10px 0;} .star-rating span.active { color: #eab308; }
+.comments-list { margin-top: 15px; border-top: 1px solid var(--panel-border); padding-top: 10px; font-size: 0.85rem; max-height: 200px; overflow-y: auto;}
+.comment-item { background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--panel-border); }
+
+.form-row { display: flex; gap: 10px; margin-top: 10px; }
+.categories-checkboxes { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0; font-size: 0.85rem;}
+.categories-checkboxes label { background: var(--input-bg); padding: 5px 10px; border-radius: 15px; border: 1px solid var(--input-border); cursor: pointer;}
+textarea.portal-input { height: 120px; text-align: left; resize: vertical; font-family: 'Lexend'; font-size: 0.9rem;}
+textarea.portal-code { font-family: monospace; font-size: 0.8rem; }
+.color-picker-wrap { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0 20px 0; }
+</style>
+</head>
+<body>
+
+<button id="global-home-btn" onclick="closeGame()">⬅️ RETOUR</button>
+<div id="spectator-info">👁️ <span id="spectator-count-val">0</span></div>
+<button id="global-voice-btn" onclick="toggleVoiceChat()">🎤 VOCAL</button>
+
+<div id="spectator-emotes-bar">
+    <button class="emote-btn" onclick="sendEmote('😂')">😂</button>
+    <button class="emote-btn" onclick="sendEmote('😡')">😡</button>
+    <button class="emote-btn" onclick="sendEmote('🤯')">🤯</button>
+    <button class="emote-btn" onclick="sendEmote('👏')">👏</button>
+</div>
+
+<div id="lobby-qr-box">
+    <div style="font-family:'Bungee'; font-size:0.9rem; margin-bottom:5px; color:#0f172a; text-align:center;">CODE SALON<br><span id="lobby-qr-code-txt" style="color:var(--accent); font-size:1.2rem;"></span></div>
+    <div id="lobby-qr-canvas" style="background:#fff; padding:10px; border-radius:10px;"></div>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px; font-weight:bold;">Scannez pour rejoindre via le Portail</div>
+</div>
+
+<div id="emotes-display-area"></div>
+
+<div class="screen-container active" id="login-container">
+    <div class="panel">
+        <h1 class="portal-title">LE PORTAIL</h1><p style="margin-bottom:20px;color:var(--text-muted);font-size:0.9rem;">Connexion</p>
+        <button class="portal-btn btn-google" onclick="loginGoogle()">S'IDENTIFIER AVEC GOOGLE</button>
+        <div style="margin: 25px 0; border-top: 1px solid var(--panel-border);"></div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom:10px;">Accès rapide ou invité :</p>
+        <button class="portal-btn btn-guest" style="margin-bottom:20px;" onclick="loginAsGuest()">ENTRER COMME INVITÉ</button>
+        <div style="border-top: 1px dashed var(--panel-border); padding-top: 15px;">
+            <input type="text" id="login-user" class="portal-input" placeholder="Admin/Pseudo">
+            <input type="password" id="login-pass" class="portal-input" placeholder="Mot de passe">
+            <button class="portal-btn btn-admin" onclick="tryLocalLogin()">CONNEXION LOCALE</button>
+        </div>
+    </div>
+</div>
+
+<div class="screen-container" id="games-container">
+    <h2 class="portal-subtitle">🕹️ LES JEUX</h2>
+    <div class="filters-bar">
+        <input type="text" id="search-games" class="filter-input" placeholder="Rechercher..." onkeyup="renderGrid('games')">
+        <select id="sort-games" class="filter-input" onchange="renderGrid('games')"><option value="date-desc">Récent</option><option value="fav">Favoris ❤️</option><option value="name-asc">Nom (A-Z)</option></select>
+        <select id="category-games" class="filter-input" onchange="renderGrid('games')"><option value="all">Tout</option><option value="Ambiance">Ambiance</option><option value="Cartes">Cartes</option><option value="Bluff">Bluff</option><option value="Stratégie">Stratégie</option><option value="Duo">Duo</option><option value="Coop">Coop</option><option value="Dessin">Dessin</option><option value="Mimes">Mimes</option><option value="Mots">Mots</option><option value="Rapidité">Rapidité</option><option value="Enfants">Enfants</option><option value="Plateau">Plateau</option><option value="Réflexion">Réflexion</option></select>
+        <div class="gauge-container"><label id="lbl-players-games">👥 Nb Joueurs : Tous</label><input type="range" id="filter-players-games" min="0" max="15" value="0" oninput="updateGaugeLabel('games', this.value); renderGrid('games');"></div>
+    </div>
+    <button id="btn-add-game" class="portal-btn btn-add" style="display: none;" onclick="showAddScreen('games')">+ AJOUTER UN JEU</button>
+    <div class="items-grid" id="games-grid"></div>
+    <button class="portal-btn btn-secondary" style="max-width:300px; margin: 20px auto;" onclick="openSuggestModal()">💡 FAIRE UNE SUGGESTION</button>
+</div>
+
+<div class="screen-container" id="quiz-container">
+    <h2 class="portal-subtitle" style="color:#10b981;">🧠 LES QUIZ</h2>
+    <div class="filters-bar">
+        <input type="text" id="search-quiz" class="filter-input" placeholder="Rechercher..." onkeyup="renderGrid('quiz')">
+        <select id="sort-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="date-desc">Récent</option><option value="fav">Favoris ❤️</option></select>
+        <select id="category-quiz" class="filter-input" onchange="renderGrid('quiz')"><option value="all">Tout</option><option value="Culture">Culture</option><option value="Jeux Vidéo">Jeux Vidéo</option><option value="Cinéma">Cinéma</option><option value="Musique">Musique</option><option value="Anime/Manga">Anime/Manga</option><option value="Sport">Sport</option><option value="Histoire">Histoire</option><option value="Géographie">Géographie</option><option value="Sciences">Sciences</option></select>
+        <div class="gauge-container"><label id="lbl-players-quiz">👥 Nb Joueurs : Tous</label><input type="range" id="filter-players-quiz" min="0" max="15" value="0" oninput="updateGaugeLabel('quiz', this.value); renderGrid('quiz');"></div>
+    </div>
+    <button id="btn-add-quiz" class="portal-btn btn-add" style="display: none; background:#10b981;" onclick="showAddScreen('quiz')">+ AJOUTER UN QUIZ</button>
+    <div class="items-grid" id="quiz-grid"></div>
+    <button class="portal-btn btn-secondary" style="max-width:300px; margin: 20px auto;" onclick="openSuggestModal()">💡 FAIRE UNE SUGGESTION</button>
+</div>
+
+<div class="screen-container" id="lobbies-container">
+    <h2 class="portal-subtitle" style="color:#a855f7;">🚪 SALONS ACTIFS</h2>
+    <div id="lobbies-list" style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:10px; padding:10px;"></div>
+</div>
+
+<div class="screen-container" id="chat-container">
+    <h2 class="portal-subtitle" style="color:#f59e0b;">💬 TCHAT GLOBAL</h2>
+    <div class="quest-box" style="margin-bottom:15px; width:100%; max-width:600px;">
+        <b style="color:#a855f7;">📩 Messages Privés</b>
+        <div id="chat-inbox-list" class="friends-list" style="margin-top:10px; max-height:150px;"></div>
+    </div>
+    <div class="chat-box"><div class="chat-messages" id="global-chat-messages"></div><div class="chat-input-area"><input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key === 'Enter') sendChatMessage()"><button onclick="sendChatMessage()">ENVOYER</button></div></div>
+</div>
+
+<div class="screen-container" id="profile-container">
+    <h2 class="portal-subtitle" style="color:#ec4899;">👤 MON PROFIL</h2>
+    <div class="panel">
+        <div class="avatar-select" id="prof-avatar" onclick="changeAvatar()">👽</div><h3 id="prof-name" style="font-family:'Bungee'; margin-bottom:5px; font-size:1.5rem;">Joueur</h3>
+        
+        <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:5px;">Niveau <span id="prof-level" style="color:var(--accent); font-weight:bold; font-size:1.1rem;">1</span></div>
+        <div style="width:100%; height:12px; background:var(--input-bg); border-radius:6px; margin-bottom:15px; overflow:hidden; border:1px solid var(--panel-border);">
+            <div id="prof-xp-bar" style="height:100%; background:var(--accent); width:0%; transition:0.3s;"></div>
+        </div>
+
+        <button class="portal-btn btn-share" style="width:auto; margin: 0 auto 10px auto; padding: 5px 15px; font-size:0.8rem;" onclick="shareFriendCode()">🔗 MON CODE AMI</button>
+        <button class="portal-btn btn-secondary" style="margin: 0 auto 15px auto; padding: 8px; width:auto; font-size:0.8rem;" onclick="editProfileName()">✏️ CHANGER DE NOM</button>
+        
+        <div class="social-grid">
+            <div class="quest-box"><b style="color:#10b981;">🏅 Mes Badges (Cliquer pour infos)</b><div id="badges-list" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:10px;"></div></div>
+
+            <div class="quest-box"><b style="color:#ec4899;">🤝 Mes Amis</b><div style="display:flex; gap:5px; margin:10px 0;"><input type="text" id="add-friend-input" class="portal-input" style="margin:0; padding:8px; font-size:0.8rem; text-transform:uppercase;" placeholder="Code Ami"><button class="portal-btn btn-admin" style="width:auto; margin:0; padding:0 10px;" onclick="addFriendByCode()">+</button></div><div class="friends-list" id="profile-friends-box">Aucun ami.</div></div>
+            <div class="quest-box"><b style="color:#a855f7;">📩 Messagerie</b><div id="inbox-list" class="friends-list" style="margin-top:10px; max-height:150px;"></div></div>
+            <div class="quest-box"><b style="color:#eab308;">⭐ Top Jeux</b><div id="top-games-list" style="margin-top:10px;"></div></div>
+            <div class="quest-box"><b style="color:#10b981;">🕒 Récents</b><div id="history-list" style="margin-top:10px;"></div></div>
+        </div>
+        <div style="border-top:1px dashed var(--panel-border); margin-top:20px; padding-top:20px; display:flex; flex-direction:column; gap:10px;"><button class="portal-btn btn-secondary" onclick="toggleTheme()">🌓 SOMBRE/CLAIR</button><button class="portal-btn btn-secondary" id="btn-sound-toggle" onclick="toggleSound()">🔊 SON : ACTIVÉ</button><button class="portal-btn btn-secondary" id="btn-notif-toggle" onclick="toggleNotifs()">🔔 NOTIFS : DÉSACTIVÉES</button></div>
+    </div>
+    <div class="panel" id="admin-tools" style="display:none; margin-top:20px;"><h3 style="margin-bottom:15px; color:#ef4444; font-family:'Bungee';">🛠️ ADMIN TOOLS</h3><button class="portal-btn btn-cancel" style="margin-bottom:10px;" onclick="exportData()">💾 EXPORTER LA BDD</button><button class="portal-btn btn-admin" onclick="viewSuggestions()">📥 VOIR SUGGESTIONS</button></div>
+    <button class="portal-btn btn-cancel" style="max-width: 200px; margin-top: 30px;" onclick="logout()">DÉCONNEXION</button>
+</div>
+
+<div class="screen-container" id="add-item-container">
+    <h1 class="portal-title" id="add-title-main">NOUVEL AJOUT</h1>
+    <div class="panel" style="max-width: 600px;">
+        <label>Titre</label><input type="text" id="add-title" class="portal-input"><label>Description</label><input type="text" id="add-desc" class="portal-input">
+        <label style="display:block; margin-top:10px;">Catégories :</label><div class="categories-checkboxes" id="add-categories"></div>
+        <div class="form-row"><div style="flex:1;"><label>Min Joueurs</label><input type="number" id="add-min-p" class="portal-input" value="2"></div><div style="flex:1;"><label>Max</label><input type="number" id="add-max-p" class="portal-input" value="8"></div></div>
+        <label>Règles</label><textarea id="add-rules" class="portal-input"></textarea><label>Couleur</label><div class="color-picker-wrap"><input type="color" id="add-color" value="#3b82f6"></div>
+        <label>Importer un fichier .html (Optionnel)</label><input type="file" id="add-file" class="portal-input" accept=".html" onchange="handleFileUpload(event)"><div style="margin: 10px 0; border-top: 1px dashed var(--panel-border);"></div>
+        <label>Code HTML :</label><textarea id="add-code" class="portal-input" style="font-family:monospace;"></textarea>
+        <button class="portal-btn btn-admin" style="margin-top:20px;" onclick="saveNewItem()">ENREGISTRER</button><button class="portal-btn btn-secondary" onclick="cancelAdd()">RETOUR</button>
+    </div>
+</div>
+
+<div id="global-rules-modal" class="modal-overlay">
+    <div class="rules-box">
+        <h2 id="global-rules-title" style="font-family:'Bungee'; text-align:center; font-size:2rem; color:var(--accent);">INFO</h2>
+        <div id="global-rules-content" style="font-size:0.9rem; line-height:1.5; margin-bottom:15px;"></div>
+        <button class="portal-btn btn-secondary" style="margin: 20px auto 0 auto; display:block; max-width:200px;" onclick="document.getElementById('global-rules-modal').style.display='none'">RETOUR</button>
+    </div>
+</div>
+
+<div id="rating-modal" class="modal-overlay">
+    <div class="rules-box" style="text-align:center;">
+        <h2 id="rating-title" style="font-family:'Bungee'; color:var(--accent); margin-bottom:15px;">AVIS & NOTES</h2>
+        <div style="text-align:center; margin-bottom:15px;">
+            Note moyenne : <b id="modal-avg-rating" style="color:#eab308; font-size:1.5rem;">0</b> ⭐
+            <div class="star-rating" id="modal-my-rating-ui"><span onclick="rateGame(1)">★</span><span onclick="rateGame(2)">★</span><span onclick="rateGame(3)">★</span><span onclick="rateGame(4)">★</span><span onclick="rateGame(5)">★</span></div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Votre note</p>
+        </div>
+        <div class="comments-list" id="modal-comments-box"></div>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <input type="text" id="modal-comment-input" class="portal-input" style="margin:0;" placeholder="Laisser un commentaire...">
+            <button class="portal-btn btn-admin" style="width:auto; margin:0;" onclick="postComment()">Publier</button>
+        </div>
+        <button class="portal-btn btn-secondary" style="margin-top:20px;" onclick="document.getElementById('rating-modal').style.display='none'">RETOUR</button>
+    </div>
+</div>
+
+<div id="badge-modal" class="modal-overlay">
+    <div class="rules-box" style="text-align:center; max-width:350px;">
+        <div id="badge-modal-icon" style="font-size:4rem; margin-bottom:10px;"></div>
+        <h2 id="badge-modal-title" style="font-family:'Bungee'; color:var(--accent); margin-bottom:10px;"></h2>
+        <p id="badge-modal-desc" style="font-size:0.9rem; color:var(--text-main); margin-bottom:15px;"></p>
+        <div id="badge-modal-status" style="font-weight:bold; margin-bottom:20px; font-size:1.1rem;"></div>
+        <button class="portal-btn btn-secondary" onclick="document.getElementById('badge-modal').style.display='none'">RETOUR</button>
+    </div>
+</div>
+
+<div id="invite-modal" class="modal-overlay">
+    <div class="rules-box" style="text-align:center;">
+        <h2 style="font-family:'Bungee'; color:var(--accent); margin-bottom:10px;">INVITATION !</h2>
+        <p id="invite-msg" style="font-size:1.1rem; font-weight:bold; margin-bottom:20px;"></p>
+        <button class="portal-btn btn-admin" id="invite-accept-btn">✅ REJOINDRE</button>
+        <button class="portal-btn btn-secondary" onclick="document.getElementById('invite-modal').style.display='none'">❌ DÉCLINER</button>
+    </div>
+</div>
+
+<div id="pp-modal" class="modal-overlay"><div class="rules-box" style="text-align:center; max-width:300px;"><div id="pp-ava" style="font-size:3rem; margin-bottom:10px;"></div><h2 id="pp-nom" style="font-family:'Bungee'; color:var(--accent);"></h2><button class="portal-btn btn-admin" onclick="openPM()">💬 MESSAGE PRIVÉ</button><button class="portal-btn btn-secondary" onclick="addFriendByUid(currentProfileUid)">🤝 AJOUTER EN AMI</button><button class="portal-btn btn-secondary" style="margin-top:10px;" onclick="document.getElementById('pp-modal').style.display='none'">RETOUR</button></div></div>
+<div id="pm-modal" class="modal-overlay"><div class="rules-box" style="display:flex; flex-direction:column; height:60vh; max-height:500px; padding:15px;"><h3 id="pm-title" style="font-family:'Bungee'; text-align:center; border-bottom:1px solid var(--panel-border); padding-bottom:10px; margin-bottom:10px;"></h3><div id="pm-messages" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:10px; font-size:0.85rem;"></div><div style="display:flex; gap:5px;"><input type="text" id="pm-input" class="portal-input" style="margin:0; padding:10px;" placeholder="Message..." onkeypress="if(event.key==='Enter') sendPM()"><button class="portal-btn btn-admin" style="width:auto; margin:0; padding:0 15px;" onclick="sendPM()">▶</button></div><button class="portal-btn btn-secondary" style="margin-top:10px;" onclick="closePM()">RETOUR</button></div></div>
+<div id="suggest-modal" class="modal-overlay"><div class="rules-box" style="text-align:center;"><h2 style="font-family:'Bungee'; color:var(--accent); margin-bottom:10px;">SUGGESTION</h2><textarea id="suggest-input" class="portal-input" placeholder="Idée de jeu..."></textarea><button class="portal-btn btn-admin" onclick="sendSuggestion()">ENVOYER</button><button class="portal-btn btn-secondary" onclick="document.getElementById('suggest-modal').style.display='none'">RETOUR</button></div></div>
+<div id="admin-sugg-modal" class="modal-overlay"><div class="rules-box"><h2 style="font-family:'Bungee'; color:var(--accent);">SUGGESTIONS</h2><div id="sugg-list" style="max-height:60vh; overflow-y:auto; font-size:0.85rem; margin-bottom:10px;"></div><button class="portal-btn btn-secondary" onclick="document.getElementById('admin-sugg-modal').style.display='none'">RETOUR</button></div></div>
+
+<div class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-games" onclick="switchTab('games')">🎮<br><span>JEUX</span></button>
+    <button class="nav-btn" id="nav-quiz" onclick="switchTab('quiz')">🧠<br><span>QUIZ</span></button>
+    <button class="nav-btn" id="nav-lobbies" onclick="switchTab('lobbies')">🚪<br><span>SALONS</span></button>
+    <button class="nav-btn" id="nav-chat" onclick="switchTab('chat')" style="position:relative;">💬<br><span>TCHAT</span><span id="nav-chat-badge" style="display:none; position:absolute; top:5px; right:15px; width:10px; height:10px; background:red; border-radius:50%;"></span></button>
+    <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')" style="position:relative;">👤<br><span>PROFIL</span><span id="nav-profile-badge" style="display:none; position:absolute; top:5px; right:15px; width:10px; height:10px; background:red; border-radius:50%;"></span></button>
+</div>
+
+<div id="game-player-container"><iframe id="game-iframe" sandbox="allow-scripts allow-same-origin allow-forms"></iframe></div>
+
+<script>
+const fbConf={apiKey:"AIzaSyBEiKDARJMM8VPbFrLJBzEC7c2paw2HGUQ",authDomain:"timebomb3-572e0.firebaseapp.com",databaseURL:"https://timebomb3-572e0-default-rtdb.europe-west1.firebasedatabase.app",projectId:"timebomb3-572e0",storageBucket:"timebomb3-572e0.firebasestorage.app",messagingSenderId:"57545585120",appId:"1:57545585120:web:a13c7c67f4da27f0fefb85"};
+if(!firebase.apps.length)firebase.initializeApp(fbConf);const db=firebase.database();const auth=firebase.auth();const GAME_CATS=["Ambiance","Cartes","Bluff","Stratégie","Duo","Coop","Dessin","Mimes","Mots","Rapidité","Enfants","Plateau","Réflexion"];const QUIZ_CATS=["Culture","Jeux Vidéo","Cinéma","Musique","Anime/Manga","Sport","Histoire","Géographie","Sciences"];
+
+const BADGES = [
+    { id: 'b1', name: 'Novice', desc: 'Jouer 1 partie ou quiz', check: s => ((s.gamesPlayed||0) + (s.quizzesPlayed||0)) >= 1, icon: '🌱' },
+    { id: 'b2', name: 'Habitué', desc: 'Jouer 10 parties ou quiz', check: s => ((s.gamesPlayed||0) + (s.quizzesPlayed||0)) >= 10, icon: '🎮' },
+    { id: 'b3', name: 'Vétéran', desc: 'Jouer 100 parties au total', check: s => ((s.gamesPlayed||0) + (s.quizzesPlayed||0)) >= 100, icon: '⚔️' },
+    { id: 'b4', name: 'Curieux', desc: 'Faire 10 quiz', check: s => (s.quizzesPlayed||0) >= 10, icon: '🧠' },
+    { id: 'b5', name: 'Sociable', desc: 'Avoir 10 amis', check: s => (s.friendsCount||0) >= 10, icon: '🤝' },
+    { id: 'b6', name: 'Critique', desc: 'Mettre 10 notes', check: s => (s.ratingsCount||0) >= 10, icon: '⭐' },
+    { id: 'b7', name: 'Bavard', desc: 'Écrire 10 commentaires', check: s => (s.commentsCount||0) >= 10, icon: '💬' },
+    { id: 'b8', name: 'Inventif', desc: 'Faire une suggestion', check: s => (s.suggestionsCount||0) >= 1, icon: '💡' },
+    { id: 'b9', name: 'Apprenti', desc: 'Atteindre le niveau 10', check: (s, lvl) => lvl >= 10, icon: '🎖️' },
+    { id: 'b10', name: 'Maître', desc: 'Atteindre le niveau 20', check: (s, lvl) => lvl >= 20, icon: '👑' }
+];
+
+let portalState={currentUser:null,role:'guest',games:[],quiz:[],presence:{},ratings:{},comments:{},usersList:{},currentTab:'games',addingType:'games',editingItemId:null,currentLobbyId:null,voiceStream:null,lastEmoteTime:0,activeLobbies:{portal:{},quiz:{}},settings:{theme:'dark',sound:true,notifs:false,favs:{}}};
+let currentProfileUid=null;let currentPmId=null;window.portalState=portalState;
+if(localStorage.getItem('portal_favs'))portalState.settings.favs=JSON.parse(localStorage.getItem('portal_favs'));if(localStorage.getItem('portal_theme')==='light')toggleTheme();if(localStorage.getItem('portal_offline_games'))portalState.games=JSON.parse(localStorage.getItem('portal_offline_games'));
+let lastAct=Date.now();let isOnlineStatus=true;['click','touchstart','mousemove','keydown'].forEach(e=>window.addEventListener(e,()=>{lastAct=Date.now();if(portalState.currentUser&&!isOnlineStatus){isOnlineStatus=true;db.ref('portal_users/'+portalState.currentUser.uid).update({online:true});}}));setInterval(()=>{if(portalState.currentUser&&isOnlineStatus&&(Date.now()-lastAct>300000)){isOnlineStatus=false;db.ref('portal_users/'+portalState.currentUser.uid).update({online:false});}},30000);
+
+window.onload=()=>{
+    if(!navigator.onLine&&portalState.games.length>0){alert("Hors-ligne !");document.getElementById('bottom-nav').classList.add('active');switchTab('games');}else{switchScreen('login-container');}
+    updateCategoryCheckboxes('games');
+    
+    db.ref('portal_games_list').on('value',s=>{let v=s.val();portalState.games=v?(Array.isArray(v)?v:Object.values(v)).filter(x=>x!==null&&typeof x==='object'):[];localStorage.setItem('portal_offline_games',JSON.stringify(portalState.games));if(portalState.currentTab==='games')renderGrid('games');});
+    db.ref('portal_quiz_list').on('value',s=>{let v=s.val();portalState.quiz=v?(Array.isArray(v)?v:Object.values(v)).filter(x=>x!==null&&typeof x==='object'):[];if(portalState.currentTab==='quiz')renderGrid('quiz');});
+    db.ref('portal_presence').on('value',s=>{portalState.presence=s.exists()?s.val():{};if(portalState.currentTab==='games')renderGrid('games');});
+    db.ref('portal_ratings').on('value',s=>{portalState.ratings=s.exists()?s.val():{};if(portalState.currentTab==='games'||portalState.currentTab==='quiz'){renderGrid(portalState.currentTab);}});
+    db.ref('portal_comments').on('value',s=>{portalState.comments=s.exists()?s.val():{};});
+    
+    db.ref('portal_users').on('value',s=>{if(s.exists()){portalState.usersList=s.val();renderFriendsList();renderInboxAndHistory();updateProfileUI();}});
+    db.ref('global_chat').on('value',s=>{let b=document.getElementById('global-chat-messages');b.innerHTML='';if(!s.exists())return;let now=Date.now();s.forEach(c=>{let m=c.val();if(now-m.time>86400000){db.ref('global_chat/'+c.key).remove();return;}let isMe=(portalState.currentUser&&m.uid===portalState.currentUser.uid);let delBtn=portalState.role==='admin'?`<span style="color:red; cursor:pointer; margin-left:10px;" onclick="deleteMsg('${c.key}')">✖</span>`:'';let uD = portalState.usersList[m.uid] || {}; let dot=uD.online?'🟢':'🔴'; let uLvl = uD.level || 1; let el=document.createElement('div');el.className=`chat-msg ${isMe?'me':''}`;el.innerHTML=`<div class="chat-header"><span class="chat-avatar-link" onclick="openProfile('${m.uid}')">${m.avatar} ${m.name} <span style="font-size:0.6rem; color:var(--accent);">Niv.${uLvl}</span> ${dot}</span> ${delBtn}</div><div>${m.text}</div>`;b.appendChild(el);});b.scrollTop=b.scrollHeight;});
+    
+    db.ref('portal_lobbies').on('value', s => { portalState.activeLobbies.portal = s.val() || {}; renderLobbiesUI(); });
+    db.ref('quiz_emoji_rooms').on('value', s => { let q = s.val() || {}; let mapped = {}; Object.keys(q).forEach(k => { let gId = q[k].gameId || (portalState.quiz.length > 0 ? portalState.quiz[0].id : 'quiz_emoji'); mapped[k] = { host: q[k].host, hostName: q[k].players && q[k].players[q[k].host] ? q[k].players[q[k].host].name : "Hôte", gameId: gId, gameTitle: 'Quiz Emojis', players: q[k].players || {}, status: q[k].status, createdAt: q[k].createdAt || Date.now(), isQuiz: true }; }); portalState.activeLobbies.quiz = mapped; renderLobbiesUI(); });
+    auth.onAuthStateChanged(u => { if(u) { let adm = (u.email === "nassim57132@gmail.com"); setupUserSession({ uid: u.uid, name: adm ? 'Nassim' : (u.displayName || 'Joueur'), avatar: adm ? '👑' : 'admin' ? 'admin' : 'guest' }); } });
+
+    window.addEventListener('message', (e) => { if(e.data && e.data.type === 'game_win' && e.data.uid === portalState.currentUser?.uid) { addXP(50); } });
+};
+
+// ================= SYSTEME XP ET NIVEAUX =================
+function addXP(amount) {
+    if(!portalState.currentUser) return;
+    let uid = portalState.currentUser.uid;
+    db.ref(`portal_users/${uid}`).once('value').then(s => {
+        let u = s.val(); if(!u) return;
+        let curXp = u.xp || 0;
+        let newXp = curXp + amount;
+        let newLvl = Math.min(100, Math.floor(newXp / 100) + 1);
+        db.ref(`portal_users/${uid}`).update({ xp: newXp, level: newLvl });
+    }).catch(e=>{});
+}
+
+function openBadgeModal(name, desc, icon, isUnlocked) {
+    document.getElementById('badge-modal-icon').innerText = icon;
+    document.getElementById('badge-modal-icon').style.filter = isUnlocked ? 'grayscale(0) opacity(1)' : 'grayscale(1) opacity(0.3)';
+    document.getElementById('badge-modal-title').innerText = name;
+    document.getElementById('badge-modal-desc').innerText = desc;
+    let statusEl = document.getElementById('badge-modal-status');
+    if (isUnlocked) {
+        statusEl.innerText = "DÉBLOQUÉ ✅";
+        statusEl.style.color = "var(--success)";
+    } else {
+        statusEl.innerText = "VERROUILLÉ 🔒";
+        statusEl.style.color = "var(--danger)";
+    }
+    document.getElementById('badge-modal').style.display = 'flex';
+}
+
+function updateProfileUI() {
+    if(!portalState.currentUser) return;
+    let uD = portalState.usersList[portalState.currentUser.uid] || {};
+    let lvl = uD.level || 1; let xp = uD.xp || 0;
+    let xpNext = lvl * 100; let xpPrev = (lvl - 1) * 100;
+    let progress = ((xp - xpPrev) / (xpNext - xpPrev)) * 100;
+
+    let pl = document.getElementById('prof-level'); if(pl) pl.innerText = lvl;
+    let pb = document.getElementById('prof-xp-bar'); if(pb) pb.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+
+    let stats = uD.stats || {};
+    stats.friendsCount = Object.keys(uD.friends || {}).length;
+    stats.gamesPlayed = 0; stats.quizzesPlayed = 0;
+    if(uD.playedGames) {
+        Object.keys(uD.playedGames).forEach(k => {
+            let isQ = Array.isArray(portalState.quiz) ? portalState.quiz.some(q=>q.id===k) : false;
+            if(isQ) stats.quizzesPlayed += uD.playedGames[k];
+            else stats.gamesPlayed += uD.playedGames[k];
+        });
+    }
+
+    let badgesHtml = '';
+    BADGES.forEach(b => {
+        let isUnlocked = b.check(stats, lvl);
+        let filter = isUnlocked ? 'grayscale(0) opacity(1)' : 'grayscale(1) opacity(0.3)';
+        let borderColor = isUnlocked ? 'var(--accent)' : 'var(--panel-border)';
+        let clickAction = `openBadgeModal('${b.name.replace(/'/g, "\\'")}', '${b.desc.replace(/'/g, "\\'")}', '${b.icon}', ${isUnlocked})`;
+        badgesHtml += `<div onclick="${clickAction}" style="font-size:1.8rem; background:var(--panel-bg); width:45px; height:45px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid ${borderColor}; filter:${filter}; cursor:pointer; transition:0.2s;" title="${b.name}">${b.icon}</div>`;
+    });
+    let bl = document.getElementById('badges-list'); if(bl) bl.innerHTML = badgesHtml;
+}
+
+// ================= GESTION DES SALONS ET JEU =================
+window.portalCreateLobby = function(roomCode) { 
+    try {
+        if(!portalState.currentUser || !portalState.pendingLaunchId) return; 
+        
+        let gId = portalState.pendingLaunchId; 
+        let isQuiz = false;
+        let g = null;
+        
+        if(Array.isArray(portalState.games) && portalState.games.some(x=>x.id === gId)) g = portalState.games.find(x=>x.id===gId);
+        else if(Array.isArray(portalState.quiz) && portalState.quiz.some(x=>x.id === gId)) { g = portalState.quiz.find(x=>x.id===gId); isQuiz = true; }
+        
+        let title = g ? g.title : "Jeu en ligne"; 
+        
+        portalState.currentLobbyId = roomCode; // Mémorise le salon
+
+        db.ref(`portal_users/${portalState.currentUser.uid}/activity`).update({ lobbyId: roomCode }).catch(e=>{});
+
+        let btn = document.getElementById('global-home-btn');
+        if(btn) {
+            btn.innerHTML = '⬅️ QUITTER';
+            btn.style.display = 'flex';
+        }
+
+        if (isQuiz) { listenToCurrentLobby(roomCode, true); return; }
+        
+        let lRef = db.ref('portal_lobbies/'+roomCode); 
+        lRef.set({ host: portalState.currentUser.uid, hostName: portalState.currentUser.name, gameId: gId, gameTitle: title, players: {[portalState.currentUser.uid]: portalState.currentUser.name}, status: 'waiting', createdAt: Date.now(), isQuiz: false }).catch(e=>{}); 
+        lRef.onDisconnect().remove(); 
+        listenToCurrentLobby(roomCode, false);
+    } catch(e) { console.error(e); }
+};
+
+function listenToCurrentLobby(lId, isQuiz) {
+    if(currentLobbyRef) currentLobbyRef.off();
+    let path = isQuiz ? `quiz_emoji_rooms/${lId}` : `portal_lobbies/${lId}`;
+    currentLobbyRef = db.ref(path);
+    currentLobbyRef.on('value', s => {
+        let d = s.val();
+        if(!d) {
+            document.getElementById('lobby-qr-box').style.display = 'none';
+            return;
+        }
+        
+        let specs = d.spectators ? Object.keys(d.spectators).length : 0;
+        let sInfo = document.getElementById('spectator-info');
+        if(sInfo) {
+            document.getElementById('spectator-count-val').innerText = specs;
+            sInfo.style.display = specs > 0 ? 'flex' : 'none';
+        }
+        
+        let isHost = d.host === portalState.currentUser.uid;
+        let isWaiting = (d.status === 'waiting' || d.phase === 'lobby');
+        
+        let qrBox = document.getElementById('lobby-qr-box');
+        if(qrBox) {
+            if(isHost && isWaiting && document.getElementById('game-player-container').style.display !== 'none') {
+                document.getElementById('lobby-qr-code-txt').innerText = lId;
+                qrBox.style.display = 'flex';
+                if(!document.getElementById('lobby-qr-canvas').innerHTML) {
+                    new QRCode(document.getElementById("lobby-qr-canvas"), { text: window.location.href.split('?')[0] + '?lobby=' + lId, width: 100, height: 100 });
+                }
+            } else {
+                qrBox.style.display = 'none';
+                document.getElementById('lobby-qr-canvas').innerHTML = '';
+            }
+        }
+    });
+
+    if(portalState.emoteListener) db.ref(portalState.emoteListener).off('child_added');
+    portalState.emoteListener = `${path}/emotes`;
+    db.ref(`${path}/emotes`).on('child_added', snap => {
+        let em = snap.val();
+        if(Date.now() - em.time > 10000) return;
+        spawnFloatingEmote(em.emoji);
+    });
+}
+
+function sendEmote(emoji) {
+    let now = Date.now();
+    if(now - portalState.lastEmoteTime < 20000) {
+        alert(`Veuillez patienter encore ${Math.ceil((20000 - (now - portalState.lastEmoteTime))/1000)}s.`);
+        return;
+    }
+    portalState.lastEmoteTime = now;
+    let isQuiz = Array.isArray(portalState.quiz) ? portalState.quiz.some(x=>x.id === portalState.pendingLaunchId) : false;
+    let path = isQuiz ? `quiz_emoji_rooms/${portalState.currentLobbyId}` : `portal_lobbies/${portalState.currentLobbyId}`;
+    db.ref(`${path}/emotes`).push({ emoji: emoji, time: now });
+}
+
+function spawnFloatingEmote(emoji) {
+    let el = document.createElement('div');
+    el.className = 'floating-emote';
+    el.innerText = emoji;
+    let offset = (Math.random() * 60) - 30;
+    el.style.marginLeft = `calc(-20px + ${offset}px)`;
+    document.getElementById('emotes-display-area').appendChild(el);
+    setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 2000);
+}
+
+function prepLaunch(id, t) { 
+    portalState.pendingLaunchId = id; 
+    portalState.pendingLaunchType = t; 
+    portalState.currentLobbyId = null;
+    confirmLaunch(false); 
+}
+
+function directJoinLobby(gId, lId, isSpectator) {
+    portalState.currentLobbyId = lId; 
+    portalState.pendingLaunchId = gId;
+    confirmLaunch(isSpectator);
+}
+
+function confirmLaunch(isSpectator) { 
+    let l = [...(portalState.games||[]), ...(portalState.quiz||[])]; 
+    const i = l.find(x => x.id === portalState.pendingLaunchId); 
+    if(!i) { alert("Jeu introuvable !"); return; } 
+    
+    let btn = document.getElementById('global-home-btn');
+    if(btn) {
+        if (portalState.currentLobbyId) {
+            btn.innerHTML = '⬅️ QUITTER';
+        } else {
+            btn.innerHTML = '⬅️ RETOUR';
+        }
+        btn.style.display = 'flex'; 
+    }
+
+    let seb = document.getElementById('spectator-emotes-bar');
+    if(seb) seb.style.display = isSpectator ? 'flex' : 'none';
+
+    // Cacher tous les onglets proprement
+    document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active')); 
+    let bn = document.getElementById('bottom-nav'); if(bn) bn.style.display = 'none'; 
+    
+    document.getElementById('game-player-container').style.display = 'block'; 
+    document.getElementById('global-voice-btn').style.display = 'flex'; 
+    document.getElementById('game-iframe').srcdoc = i.code || '<h1>Erreur</h1>'; 
+
+    setTimeout(() => {
+        try { 
+            if(portalState.currentUser) { 
+                let isQuiz = Array.isArray(portalState.quiz) ? portalState.quiz.some(x=>x.id === i.id) : false; 
+                if(!isSpectator) {
+                    let statKey = isQuiz ? 'quizzesPlayed' : 'gamesPlayed'; 
+                    db.ref(`portal_users/${portalState.currentUser.uid}/stats/${statKey}`).transaction(c=>(c||0)+1).catch(e=>{}); 
+                    db.ref('portal_users/' + portalState.currentUser.uid + '/playedGames/' + i.id).transaction(c => (c || 0) + 1).catch(e=>{}); 
+                    db.ref(`portal_users/${portalState.currentUser.uid}/recentGames/${Date.now()}`).set(i.id).catch(e=>{});
+                    addXP(10); 
+                }
+                
+                let pR = db.ref(`portal_presence/${i.id}/${portalState.currentUser.uid}`); pR.set(true); pR.onDisconnect().remove(); 
+                let actRef = db.ref(`portal_users/${portalState.currentUser.uid}/activity`);
+                actRef.set({ gameId: i.id, lobbyId: portalState.currentLobbyId || null, isSpectator: isSpectator === true }).catch(e=>{});
+                actRef.onDisconnect().remove();
+
+                if(portalState.currentLobbyId) {
+                    let path = isQuiz ? `quiz_emoji_rooms/${portalState.currentLobbyId}` : `portal_lobbies/${portalState.currentLobbyId}`;
+                    if(isSpectator) {
+                        let specRef = db.ref(`${path}/spectators/${portalState.currentUser.uid}`);
+                        specRef.set(true); specRef.onDisconnect().remove();
+                    }
+                    listenToCurrentLobby(portalState.currentLobbyId, isQuiz);
+                }
+            } 
+        } catch(err){} 
+    }, 50);
+}
+
+function closeGame() { 
+    try {
+        let btn = document.getElementById('global-home-btn');
+        let needsConfirm = btn && btn.innerText.includes('QUITTER');
+        
+        if(needsConfirm && !confirm("Voulez-vous vraiment quitter la partie ?")) { 
+            return; 
+        } 
+        
+        let gpc = document.getElementById('game-player-container'); if(gpc) gpc.style.display = 'none'; 
+        if(btn) btn.style.display = 'none'; 
+        let gvb = document.getElementById('global-voice-btn'); if(gvb) gvb.style.display = 'none'; 
+        let si = document.getElementById('spectator-info'); if(si) si.style.display = 'none';
+        let lqb = document.getElementById('lobby-qr-box'); if(lqb) lqb.style.display = 'none';
+        let seb = document.getElementById('spectator-emotes-bar'); if(seb) seb.style.display = 'none';
+        let iframe = document.getElementById('game-iframe'); if(iframe) iframe.srcdoc = ''; 
+        
+        if(portalState.voiceStream) toggleVoiceChat(); 
+        
+        if(portalState.currentUser) { 
+            db.ref(`portal_users/${portalState.currentUser.uid}/activity`).remove().catch(e=>{});
+            if(portalState.pendingLaunchId) db.ref(`portal_presence/${portalState.pendingLaunchId}/${portalState.currentUser.uid}`).remove().catch(e=>{}); 
+            if(portalState.currentLobbyId) {
+                let isQuiz = Array.isArray(portalState.quiz) ? portalState.quiz.some(x=>x.id === portalState.pendingLaunchId) : false;
+                let path = isQuiz ? `quiz_emoji_rooms/${portalState.currentLobbyId}` : `portal_lobbies/${portalState.currentLobbyId}`;
+                db.ref(`${path}/spectators/${portalState.currentUser.uid}`).remove().catch(e=>{});
+            }
+        } 
+        if(currentLobbyRef) { currentLobbyRef.off(); currentLobbyRef = null; }
+        if(portalState.emoteListener) { db.ref(portalState.emoteListener).off('child_added'); portalState.emoteListener = null; }
+        portalState.currentLobbyId=null; 
+        portalState.pendingLaunchId=null;
+        
+        let bn = document.getElementById('bottom-nav'); if(bn) bn.style.display = 'flex'; 
+        switchTab(portalState.currentTab || 'games'); 
+    } catch (e) {
+        document.getElementById('game-player-container').style.display = 'none';
+        let bn = document.getElementById('bottom-nav'); if(bn) bn.style.display = 'flex'; 
+        switchTab('games');
+    }
+}
+
+function renderLobbiesUI() { 
+    let b=document.getElementById('lobbies-list'); b.innerHTML=''; let all = {...portalState.activeLobbies.portal, ...portalState.activeLobbies.quiz}; let keys = Object.keys(all); 
+    if(keys.length===0) { b.innerHTML="<p style='color:var(--text-muted);'>Aucun salon actif.</p>"; return; } 
+    let now = Date.now(); 
+    keys.forEach(id => { 
+        let l = all[id]; let pC = Object.keys(l.players||{}).length; 
+        if(now - l.createdAt > 7200000) { if(l.isQuiz) db.ref('quiz_emoji_rooms/'+id).remove(); else db.ref('portal_lobbies/'+id).remove(); return; } 
+        let isHost = l.host===portalState.currentUser?.uid; 
+        let hD = portalState.usersList[l.host] || {}; let hLvl = hD.level || 1;
+        let btn=''; 
+        if(isHost || portalState.role === 'admin') { btn+=`<button class="portal-btn btn-cancel" style="padding:5px; margin-bottom:5px;" onclick="deleteLobbyManual('${id}', ${l.isQuiz?true:false}, event)">SUPPRIMER</button>`; } 
+        btn+=`<button class="portal-btn btn-secondary" style="padding:5px;" onclick="directJoinLobby('${l.gameId}', '${id}', false)">${isHost ? "RETOURNER AU JEU" : "REJOINDRE (Joueur)"}</button>`; 
+        if(!isHost && portalState.currentUser) {
+            btn+=`<button class="portal-btn btn-admin" style="padding:5px; margin-top:5px; background:#a855f7; box-shadow:0 4px 0 #7e22ce;" onclick="directJoinLobby('${l.gameId}', '${id}', true)">👁️ SPECTATEUR</button>`;
+        }
+        b.innerHTML+=`<div class="quest-box" style="margin-bottom:10px;"><b>${l.gameTitle}</b> (Hôte: ${l.hostName} <span style="color:var(--accent);font-size:0.7rem;">Niv.${hLvl}</span>)<br><span style="font-size:0.8rem;">Salon: ${id} | 👥 ${pC||1} Joueur(s)</span><div style="margin-top:8px; display:flex; flex-direction:column; gap:5px;">${btn}</div></div>`; 
+    }); 
+}
+
+function sendInvite(uid, e) {
+    e.stopPropagation();
+    if(!portalState.currentLobbyId || !portalState.pendingLaunchId) return;
+    let g = [...(portalState.games||[]), ...(portalState.quiz||[])].find(x=>x.id===portalState.pendingLaunchId);
+    db.ref(`portal_users/${uid}/invites`).push({
+        fromName: portalState.currentUser.name,
+        gameId: portalState.pendingLaunchId,
+        gameTitle: g ? g.title : 'Un jeu',
+        lobbyId: portalState.currentLobbyId,
+        time: Date.now()
+    });
+    alert('Invitation envoyée !');
+}
+
+function openSuggestModal() { document.getElementById('suggest-modal').style.display='flex'; }
+function sendSuggestion() { let v = document.getElementById('suggest-input').value.trim(); if(!v) return; db.ref(`portal_users/${portalState.currentUser.uid}/stats/suggestionsCount`).transaction(c=>(c||0)+1).catch(e=>{}); addXP(10); db.ref('portal_suggestions').push({ author: portalState.currentUser ? portalState.currentUser.name : 'Anonyme', text: v, time: Date.now() }); document.getElementById('suggest-input').value = ''; document.getElementById('suggest-modal').style.display='none'; alert("Suggestion envoyée !"); }
+
+// SYSTÈME AVIS ET NOTES
+function openRatingModal(id, event) {
+    if(event) event.stopPropagation();
+    portalState.activeItemId = id;
+    let l = [...(portalState.games||[]), ...(portalState.quiz||[])];
+    const i = l.find(x => x.id === id);
+    if(!i) return;
+    
+    document.getElementById('rating-title').innerText = "AVIS : " + i.title;
+    let iR = portalState.ratings[id] || {}; let s = Object.values(iR); 
+    document.getElementById('modal-avg-rating').innerText = s.length ? (s.reduce((a,b)=>a+b, 0) / s.length).toFixed(1) : 0; 
+    renderStars(portalState.currentUser ? (iR[portalState.currentUser.uid] || 0) : 0); 
+    let iC = portalState.comments[id] || {}; 
+    document.getElementById('modal-comments-box').innerHTML = Object.values(iC).map(c => `<div class="comment-item"><b>${c.author}</b> : ${c.text}</div>`).join('') || "<div style='opacity:0.5'>Aucun avis pour le moment.</div>"; 
+    document.getElementById('rating-modal').style.display = 'flex';
+}
+function renderStars(v) { document.querySelectorAll('#modal-my-rating-ui span').forEach((s, i) => { s.className = i < v ? 'active' : ''; }); }
+function rateGame(v) { if(!portalState.currentUser) return; db.ref(`portal_users/${portalState.currentUser.uid}/stats/ratingsCount`).transaction(c=>(c||0)+1).catch(e=>{}); addXP(5); db.ref(`portal_ratings/${portalState.activeItemId}/${portalState.currentUser.uid}`).set(v); renderStars(v); }
+function postComment() { let input = document.getElementById('modal-comment-input'); let text = input.value.trim(); if(!text || !portalState.currentUser) return; db.ref(`portal_users/${portalState.currentUser.uid}/stats/commentsCount`).transaction(c=>(c||0)+1).catch(e=>{}); addXP(5); db.ref(`portal_comments/${portalState.activeItemId}`).push({ author: portalState.currentUser.name, text: text, time: Date.now() }); input.value = ''; }
+
+function openInfo(id, t, e) { e.stopPropagation(); portalState.activeItemId = id; let l = t === 'games' ? portalState.games : portalState.quiz; const i = l.find(x => x.id === id); if(!i) return; document.getElementById('global-rules-title').innerText = i.title; document.getElementById('global-rules-title').style.color = i.color; document.getElementById('global-rules-content').innerHTML = i.rules ? i.rules.replace(/\n/g, '<br>') : "Aucune règle."; document.getElementById('global-rules-modal').style.display = 'flex'; }
+
+// UTILITAIRES CLASSIQUES
+function generateFriendCode() { let c = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", r = ""; for(let i=0; i<5; i++) r += c.charAt(Math.floor(Math.random() * c.length)); return r; }
+async function checkUniqueUsername(n) { try { let s = await db.ref('portal_usernames/' + n.toLowerCase()).once('value'); return !s.exists(); } catch(e) { return true; } }
+async function updateUsernameMap(o, n, uid) { try { if(o) await db.ref('portal_usernames/' + o.toLowerCase()).remove(); await db.ref('portal_usernames/' + n.toLowerCase()).set(uid); } catch(e) {} }
+function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{}); }
+function tryLocalLogin() { let uI = document.getElementById('login-user'); let pI = document.getElementById('login-pass'); let u = uI ? uI.value.trim() : ''; let p = pI ? pI.value.trim() : ''; if(u === 'nassim' && p === 'nassim') { setupUserSession({ uid: 'admin_local', name: 'Nassim', avatar: '👑', role: 'admin' }); } else if(u) { setupUserSession({ uid: 'local_'+u.replace(/\W/g, ''), name: u, avatar: '👽', role: 'guest' }); } else { alert("Identifiant requis !"); } }
+async function loginAsGuest() { let b = "Joueur" + Math.floor(Math.random()*1000); let u = true; try { u = await checkUniqueUsername(b); } catch(e){} let n = u ? b : b + "x"; setupUserSession({ uid: 'guest_' + Date.now(), name: n, avatar: '👻', role: 'guest' }); }
+
+async function setupUserSession(uD) { 
+    portalState.currentUser = uD; portalState.role = uD.role; let at = document.getElementById('admin-tools'); if(at) at.style.display = uD.role === 'admin' ? 'block' : 'none'; let bag = document.getElementById('btn-add-game'); if(bag) bag.style.display = uD.role === 'admin' ? 'block' : 'none'; let baq = document.getElementById('btn-add-quiz'); if(baq) baq.style.display = uD.role === 'admin' ? 'block' : 'none'; try { await updateUsernameMap(null, uD.name, uD.uid); } catch(e){} 
+    let uRef = db.ref('portal_users/' + uD.uid); uRef.update({ name: uD.name, avatar: uD.avatar, online: true }).then(() => uRef.onDisconnect().update({ online: false })).catch(()=>{}); 
+    uRef.once('value', async s => { 
+        let d = s.val() || {}; let fC = d.friendCode; 
+        if(!fC) { fC = generateFriendCode(); try { await db.ref('portal_friend_codes/' + fC).set(uD.uid); } catch(e){} try { await uRef.update({ friendCode: fC }); } catch(e){} } 
+        portalState.currentUser.friendCode = fC; let pn = document.getElementById('prof-name'); if(pn) pn.innerText = uD.name + " #" + fC; localStorage.setItem('portal_uid', uD.uid); localStorage.setItem('portal_name', uD.name); 
+        let savedTab = localStorage.getItem('saved_tab'); if(!['games','quiz','lobbies','chat','profile'].includes(savedTab)) savedTab = 'games'; 
+        let lc = document.getElementById('login-container'); if(lc) lc.classList.remove('active'); let bn = document.getElementById('bottom-nav'); if(bn) bn.classList.add('active'); 
+        switchTab(savedTab); renderGrid('games'); renderGrid('quiz'); 
+    }); 
+    if(window.inviteListenerRef) window.inviteListenerRef.off();
+    window.inviteListenerRef = db.ref(`portal_users/${uD.uid}/invites`);
+    window.inviteListenerRef.on('child_added', snap => {
+        let inv = snap.val(); if(Date.now() - inv.time > 60000) { snap.ref.remove(); return; } 
+        document.getElementById('invite-msg').innerText = `${inv.fromName} vous invite à jouer à ${inv.gameTitle} !`;
+        document.getElementById('invite-accept-btn').onclick = () => { document.getElementById('invite-modal').style.display='none'; snap.ref.remove(); directJoinLobby(inv.gameId, inv.lobbyId, false); };
+        document.getElementById('invite-modal').style.display='flex'; snap.ref.remove();
+    });
+}
+
+async function editProfileName() { let n = prompt("Nouveau pseudo (unique) :", portalState.currentUser.name); if (n && n.trim() !== "") { n = n.trim(); let u = await checkUniqueUsername(n); if(!u) return alert("Ce pseudo est déjà pris !"); await updateUsernameMap(portalState.currentUser.name, n, portalState.currentUser.uid); portalState.currentUser.name = n; document.getElementById('prof-name').innerText = n + " #" + portalState.currentUser.friendCode; db.ref('portal_users/' + portalState.currentUser.uid).update({ name: n }); } }
+function logout() { if(portalState.currentUser) db.ref('portal_users/' + portalState.currentUser.uid).update({ online: false }); portalState.currentUser = null; portalState.role = 'guest'; document.getElementById('bottom-nav').classList.remove('active'); switchScreen('login-container'); }
+
+function switchScreen(id) { 
+    document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active')); 
+    let sc = document.getElementById(id);
+    if(sc) {
+        sc.classList.add('active');
+    } else {
+        // Fallback sécurisé vers l'onglet des jeux si l'ID n'est pas trouvé
+        let g = document.getElementById('games-container'); 
+        if(g) g.classList.add('active'); 
+    }
+}
+
+function switchTab(t) { 
+    if(!t || !document.getElementById('nav-' + t)) t = 'games';
+    portalState.currentTab = t; 
+    localStorage.setItem('saved_tab', t); 
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
+    let btn = document.getElementById('nav-' + t);
+    if(btn) btn.classList.add('active'); 
+    switchScreen(t + '-container'); 
+}
+
+function updateGaugeLabel(t, v) { document.getElementById(`lbl-players-${t}`).innerText = v == 0 ? "👥 Nb Joueurs : Tous" : `👥 Nb Joueurs : ${v}`; }
+function toggleTheme() { document.body.classList.toggle('light-mode'); portalState.settings.theme = document.body.classList.contains('light-mode') ? 'light' : 'dark'; localStorage.setItem('portal_theme', portalState.settings.theme); }
+function toggleSound() { portalState.settings.sound = !portalState.settings.sound; document.getElementById('btn-sound-toggle').innerText = portalState.settings.sound ? "🔊 SON : ACTIVÉ" : "🔇 SON : DÉSACTIVÉ"; }
+function changeAvatar() { const em = ['👽','👻','🤖','🤡','🤠','😈','🦊','🐼','🦄','🦖']; let c = document.getElementById('prof-avatar').innerText; let n = em[(em.indexOf(c) + 1) % em.length]; document.getElementById('prof-avatar').innerText = n; if(portalState.currentUser) db.ref('portal_users/' + portalState.currentUser.uid).update({ avatar: n }); }
+function sendPush(t, b) { if(portalState.settings.notifs && Notification.permission === "granted") { try { new Notification(t, { body: b }); } catch(e){} } }
+function toggleNotifs() { if(Notification.permission !== "granted") { Notification.requestPermission().then(p => { if(p==="granted") { portalState.settings.notifs = true; document.getElementById('btn-notif-toggle').innerText="🔔 NOTIFS : ACTIVÉES"; } }); } else { portalState.settings.notifs = !portalState.settings.notifs; document.getElementById('btn-notif-toggle').innerText=portalState.settings.notifs ? "🔔 NOTIFS : ACTIVÉES" : "🔔 NOTIFS : DÉSACTIVÉES"; } }
+function shareFriendCode() { let c = portalState.currentUser.friendCode; let txt = `Ajoute-moi sur le Portail ! Mon code : ${c}`; if(navigator.share) { navigator.share({title: 'Code Ami', text: txt}).catch(e=>{}); } else { navigator.clipboard.writeText(c); alert("Code copié : " + c); } }
+
+function renderGrid(t) { 
+    let l = t === 'games' ? [...(portalState.games||[])] : [...(portalState.quiz||[])]; 
+    const grid = document.getElementById(t + '-grid'); grid.innerHTML = ''; 
+    let sV = document.getElementById('search-' + t).value.trim().toLowerCase(); 
+    let sNode = document.getElementById('sort-' + t); let sVal = sNode ? sNode.value : 'date-desc'; 
+    let fCat = document.getElementById('category-' + t).value; let fP = parseInt(document.getElementById('filter-players-' + t).value); 
+    
+    let filtered = l.filter(i => { 
+        if(!i || !i.title) return false; 
+        let tM = i.title.toLowerCase().includes(sV) || (i.desc && i.desc.toLowerCase().includes(sV)); 
+        let mF = sVal === 'fav' ? portalState.settings.favs[i.id] : true; 
+        let cS = (i.categories ? i.categories.join(' ') : (i.tags || '')).toLowerCase(); 
+        let mC = fCat === 'all' ? true : cS.includes(fCat.toLowerCase()); 
+        let mP = fP === 0 ? true : (fP >= (i.minP||1) && fP <= (i.maxP||99)); 
+        return tM && mF && mC && mP; 
+    }); 
+    
+    filtered.sort((a, b) => { 
+        let tA = a.timestamp || 0; let tB = b.timestamp || 0; 
+        let nA = (a.title||'').toLowerCase(); let nB = (b.title||'').toLowerCase(); 
+        if(sVal === 'date-desc' || sVal === 'fav') return tB - tA; 
+        if(sVal === 'name-asc') return nA.localeCompare(nB); 
+        if(sVal === 'name-desc') return nB.localeCompare(nA); 
+        return 0; 
+    }); 
+    
+    filtered.forEach(i => { 
+        let lC = portalState.presence[i.id] ? Object.keys(portalState.presence[i.id]).length : 0; 
+        let lH = lC > 0 ? `<div class="live-counter">🔥 ${lC} Joueur(s) en ligne</div>` : ''; 
+        let c = document.createElement('div'); c.className = 'item-card'; c.style.borderColor = i.color; 
+        let isF = portalState.settings.favs[i.id]; 
+        let fH = `<span class="fav-icon ${isF?'active':''}" onclick="toggleFav('${i.id}', event)">❤️</span>`; 
+        
+        let iR = portalState.ratings[i.id] || {}; 
+        let s = Object.values(iR); 
+        let avg = s.length ? (s.reduce((a,b)=>a+b, 0)/s.length).toFixed(1) : '-';
+        let ratingPill = `<div class="rating-pill" onclick="openRatingModal('${i.id}', event)">⭐ ${avg}</div>`;
+
+        let iB = `<div class="action-btn btn-i" onclick="openInfo('${i.id}', '${t}', event)">i</div>`; 
+        let sH = navigator.share ? `<div class="action-btn btn-share" onclick="shareGame('${i.id}', event)">🔗</div>` : ''; 
+        let eB = portalState.role === 'admin' ? `<div class="action-btn btn-ed" onclick="editItem('${i.id}', '${t}', event)">✏️</div>` : ''; 
+        let dB = portalState.role === 'admin' ? `<div class="action-btn btn-del" onclick="deleteItem('${i.id}', '${t}', event)">✖</div>` : ''; 
+        let rA = `<div class="card-actions-right">${iB}${sH}${eB}${dB}</div>`; 
+        
+        let pH = ''; if(i.minP && i.maxP) { pH = (i.minP == 2 && i.maxP == 2) ? `<div class="item-players">👥 Uniquement à 2 Joueurs</div>` : `<div class="item-players">👥 ${i.minP} à ${i.maxP} Joueurs</div>`; } 
+        let cT = i.categories ? i.categories.join(' • ') : (i.tags || ''); 
+        let cH = cT ? `<div class="item-categories">${cT}</div>` : ''; 
+        
+        c.innerHTML = `${ratingPill} ${rA} <div><div class="item-title" style="color: ${i.color}; margin-top:10px;">${i.title} ${fH}</div>${cH} ${lH} ${pH} <div class="item-desc">${i.desc || ''}</div></div><button class="play-btn" style="background: ${i.color};" onclick="prepLaunch('${i.id}', '${t}')">JOUER</button>`; 
+        grid.appendChild(c); 
+    }); 
+}
+
+function toggleFav(id, e) { e.stopPropagation(); if(portalState.settings.favs[id]) delete portalState.settings.favs[id]; else portalState.settings.favs[id] = true; localStorage.setItem('portal_favs', JSON.stringify(portalState.settings.favs)); renderGrid(portalState.currentTab); }
+function shareGame(id, e) { e.stopPropagation(); let i = (portalState.games||[]).find(x => x.id === id) || (portalState.quiz||[]).find(x => x.id === id); if(navigator.share && i) { navigator.share({ title: i.title, url: window.location.href }).catch(()=>{}); } }
+function updateCategoryCheckboxes(t) { let c = t === 'games' ? GAME_CATS : QUIZ_CATS; document.getElementById('add-categories').innerHTML = c.map(x => `<label><input type="checkbox" class="cat-checkbox" value="${x}"> ${x}</label>`).join(''); }
+function deleteItem(id, t, e) { e.stopPropagation(); if(confirm(`Supprimer ?`)) { if(t === 'games') { portalState.games = portalState.games.filter(g => g.id !== id); db.ref('portal_games_list').set(portalState.games); } else { portalState.quiz = portalState.quiz.filter(q => q.id !== id); db.ref('portal_quiz_list').set(portalState.quiz); } } }
+function editItem(id, t, e) { e.stopPropagation(); portalState.addingType = t; portalState.editingItemId = id; updateCategoryCheckboxes(t); let l = t === 'games' ? portalState.games : portalState.quiz; let i = l.find(x => x.id === id); if(!i) return; document.getElementById('add-title-main').innerText = "MODIFIER"; document.getElementById('add-title').value = i.title || ''; document.getElementById('add-desc').value = i.desc || ''; document.getElementById('add-min-p').value = i.minP || 1; document.getElementById('add-max-p').value = i.maxP || 99; document.getElementById('add-rules').value = i.rules || ''; document.getElementById('add-color').value = i.color || '#3b82f6'; document.getElementById('add-code').value = i.code || ''; let fInp=document.getElementById('add-file'); if(fInp)fInp.value=''; let iC = i.categories || (i.tags ? i.tags.split(',').map(x=>x.trim()) : []); document.querySelectorAll('.cat-checkbox').forEach(chk => { chk.checked = iC.includes(chk.value); }); document.getElementById('bottom-nav').style.display = 'none'; switchScreen('add-item-container'); }
+function showAddScreen(t) { portalState.addingType = t; portalState.editingItemId = null; updateCategoryCheckboxes(t); document.getElementById('add-title-main').innerText = "NOUVEAU"; document.getElementById('add-title').value = ''; document.getElementById('add-desc').value = ''; document.getElementById('add-rules').value = ''; document.getElementById('add-min-p').value = '2'; document.getElementById('add-max-p').value = '8'; document.getElementById('add-color').value = '#3b82f6'; document.getElementById('add-code').value = ''; let fInp=document.getElementById('add-file'); if(fInp)fInp.value=''; document.getElementById('bottom-nav').style.display = 'none'; switchScreen('add-item-container'); }
+function cancelAdd() { document.getElementById('bottom-nav').style.display = 'flex'; switchTab(portalState.addingType); }
+function handleFileUpload(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){document.getElementById('add-code').value=ev.target.result;alert("Fichier chargé !");};r.readAsText(f);}
+function saveNewItem() { try { const t = document.getElementById('add-title').value.trim(); const d = document.getElementById('add-desc').value.trim(); const r = document.getElementById('add-rules').value.trim(); const mp = parseInt(document.getElementById('add-min-p').value) || 1; const mxp = parseInt(document.getElementById('add-max-p').value) || 99; const c = document.getElementById('add-color').value.trim(); const cd = document.getElementById('add-code').value.trim(); let sC = Array.from(document.querySelectorAll('.cat-checkbox:checked')).map(chk => chk.value); if(!t || !cd) return alert("Le titre et le code HTML sont obligatoires."); let nI = { id: portalState.editingItemId || (portalState.addingType + '_' + Math.random().toString(36).substr(2, 9)), title: t, desc: d, categories: sC, rules: r, minP: mp, maxP: mxp, color: c, code: cd }; let l = portalState.addingType === 'games' ? (portalState.games||[]) : (portalState.quiz||[]); if(portalState.editingItemId) { let idx = l.findIndex(x => x.id === portalState.editingItemId); if(idx > -1) { nI.timestamp = l[idx].timestamp || Date.now(); l[idx] = nI; } } else { nI.timestamp = Date.now(); l.push(nI); } if(portalState.addingType === 'games') db.ref('portal_games_list').set(l); else db.ref('portal_quiz_list').set(l); document.getElementById('bottom-nav').style.display = 'flex'; switchTab(portalState.addingType); } catch(e) { alert("Erreur d'enregistrement : " + e.message); } }
+function exportData() { const b = new Blob([JSON.stringify({ games: portalState.games, quiz: portalState.quiz }, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'portail_backup.json'; a.click(); }
+
+function toggleVoiceChat() { let b = document.getElementById('global-voice-btn'); if(portalState.voiceStream) { portalState.voiceStream.getTracks().forEach(t => t.stop()); portalState.voiceStream = null; b.innerText = '🎤 VOCAL'; b.style.background = '#3b82f6'; } else { navigator.mediaDevices.getUserMedia({ audio: true }).then(s => { portalState.voiceStream = s; b.innerText = '🔊 VOCAL ON'; b.style.background = '#10b981'; }).catch(e => { alert("Micro refusé."); }); } }
+function deleteLobbyManual(lId, isQuiz, e) { if(e) e.stopPropagation(); if(confirm("Supprimer ce salon ?")) { if(isQuiz) db.ref('quiz_emoji_rooms/'+lId).remove(); else db.ref('portal_lobbies/'+lId).remove(); } }
+function viewSuggestions() { document.getElementById('admin-sugg-modal').style.display='flex'; db.ref('portal_suggestions').on('value', s => { let b = document.getElementById('sugg-list'); b.innerHTML=''; if(s.exists()) { s.forEach(c => { let d = c.val(); b.innerHTML += `<div style="background:var(--input-bg); padding:10px; border-radius:8px; margin-bottom:5px; text-align:left;"><b>${d.author}</b>: ${d.text}</div>`; }); } else { b.innerHTML = 'Aucune suggestion.'; } }); }
+function sendChatMessage() { let i = document.getElementById('chat-input'); let v = i.value.trim(); if(v && portalState.currentUser) { db.ref('global_chat').push({uid:portalState.currentUser.uid, name:portalState.currentUser.name, avatar:portalState.currentUser.avatar, text:v, time:Date.now()}); i.value=''; } }
+function deleteMsg(id) { if(portalState.role==='admin' && confirm("Supprimer ?")) db.ref('global_chat/'+id).remove(); }
+async function addFriendByCode() { let c = document.getElementById('add-friend-input').value.trim().toUpperCase(); if(!c) return; let snap = await db.ref('portal_friend_codes/'+c).once('value'); if(snap.exists()) { let fUid = snap.val(); if(fUid === portalState.currentUser.uid) return alert("C'est vous !"); db.ref(`portal_users/${portalState.currentUser.uid}/friends/${fUid}`).set(true); alert("Ami ajouté !"); document.getElementById('add-friend-input').value=''; } else { alert("Code introuvable."); } }
+function addFriendByUid(uid) { if(uid && portalState.currentUser && uid !== portalState.currentUser.uid) { db.ref(`portal_users/${portalState.currentUser.uid}/friends/${uid}`).set(true); alert("Ami ajouté !"); } }
+
+function renderFriendsList() { 
+    if(!portalState.currentUser) return; 
+    let fKs = Object.keys(portalState.usersList[portalState.currentUser.uid]?.friends || {}); 
+    let b1 = document.getElementById('profile-friends-box'); 
+    let b2 = document.getElementById('chat-inbox-list'); 
+    
+    let html = fKs.length===0 ? `<div style="opacity:0.5; font-size:0.8rem; margin:auto;">Ajoutez un ami avec son Code !</div>` : fKs.map(k => { 
+        let u = portalState.usersList[k]; if(!u) return ''; 
+        let uName = u.name ? u.name : 'Inconnu'; let uAva = u.avatar ? u.avatar : '👤'; 
+        let uLvl = u.level || 1;
+        
+        let actHtml = ''; let inviteHtml = '';
+        if(u.activity && u.activity.gameId) {
+            let gName = [...(portalState.games||[]), ...(portalState.quiz||[])].find(x=>x.id===u.activity.gameId)?.title || 'Un jeu';
+            actHtml = `<div style="font-size:0.7rem; color:var(--accent); margin-top:2px;">Joue à : ${gName}</div>`;
+            if(u.activity.lobbyId) {
+                actHtml += `<button class="portal-btn" style="padding:4px 8px; font-size:0.6rem; width:auto; margin:4px 0 0 0; background:#a855f7; box-shadow:0 2px 0 #7e22ce;" onclick="directJoinLobby('${u.activity.gameId}', '${u.activity.lobbyId}', true); event.stopPropagation();">👁️ VOIR</button>`;
+            }
+        } else if (portalState.currentLobbyId && u.online) {
+            inviteHtml = `<button class="portal-btn btn-admin" style="padding:4px 8px; font-size:0.6rem; width:auto; margin:4px 0 0 5px;" onclick="sendInvite('${k}', event)">INVITER</button>`;
+        }
+        
+        return `<div class="friend-item" onclick="openProfile('${k}')">
+            <div style="text-align:left;">${uAva} ${uName} <span style="font-size:0.6rem; color:var(--accent);">Niv.${uLvl}</span> ${u.online?'🟢':'🔴'} ${actHtml}</div>
+            ${inviteHtml}
+        </div>`; 
+    }).join(''); 
+    
+    if(b1) b1.innerHTML = html; if(b2) b2.innerHTML = html; 
+}
+
+function renderInboxAndHistory() { 
+    if(!portalState.currentUser) return; 
+    let uD = portalState.usersList[portalState.currentUser.uid] || {}; 
+    
+    let inbox = uD.inbox || {}; 
+    let iKeys = Object.keys(inbox).sort((a,b)=>inbox[b].time-inbox[a].time); 
+    let html = ''; 
+    if(iKeys.length===0) html = '<div style="opacity:0.5; font-size:0.8rem;">Aucun message.</div>'; 
+    else html = iKeys.map(k=>{ 
+        let u = portalState.usersList[k] || {}; let d = inbox[k] || {}; let uC = d.unreadCount || (d.unread ? 1 : 0); 
+        let bold = uC > 0 ? 'font-weight:bold; color:var(--accent);' : 'color:var(--text-muted);'; 
+        let bub = uC > 0 ? `<span style="background:red; color:white; border-radius:50%; padding:2px 6px; font-size:0.7rem; margin-left:5px;">${uC}</span>` : ''; 
+        let delBtn = `<button class="portal-btn btn-cancel" style="width:auto; padding:2px 6px; margin:0; font-size:0.7rem;" onclick="deleteConv('${k}', event)">✖</button>`; 
+        return `<div class="friend-item" style="${bold}" onclick="openProfile('${k}'); openPM();"><div style="display:flex; align-items:center;">${u?.avatar||'👤'} ${u?.name||'Inconnu'} ${bub}</div><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:0.7rem; opacity:0.7;">${(d.lastMsg||'').substring(0,15)}</span> ${delBtn}</div></div>`; 
+    }).join(''); 
+    let iBox = document.getElementById('inbox-list'); if(iBox) iBox.innerHTML = html; 
+    
+    let hasUnread = iKeys.some(k=>(inbox[k].unreadCount > 0 || inbox[k].unread)); 
+    let badge = document.getElementById('nav-profile-badge'); if(badge) badge.style.display = hasUnread ? 'inline-block' : 'none'; 
+    let cBadge = document.getElementById('nav-chat-badge'); if(cBadge) cBadge.style.display = hasUnread ? 'inline-block' : 'none'; 
+    
+    let played = uD.playedGames || {}; 
+    let hKeys = Object.keys(played).sort((a,b)=>played[b]-played[a]).slice(0,5); 
+    let tBox = document.getElementById('top-games-list'); 
+    if(tBox) { 
+        if(hKeys.length===0) tBox.innerHTML = '<div style="opacity:0.5; font-size:0.8rem;">Aucun jeu joué.</div>'; 
+        else tBox.innerHTML = hKeys.map(k=>{ 
+            let g = [...(portalState.games||[]), ...(portalState.quiz||[])].find(x=>x.id===k); 
+            return `<div class="leader-item"><span>🎮 ${g?g.title:'Jeu inconnu'}</span><b>${played[k]} parties</b></div>`; 
+        }).join(''); 
+    }
+    
+    let rec = uD.recentGames || {};
+    let recKeys = Object.keys(rec).sort((a,b)=>b-a).slice(0,5); 
+    let hBox = document.getElementById('history-list'); 
+    if(hBox) { 
+        if(recKeys.length===0) hBox.innerHTML = '<div style="opacity:0.5; font-size:0.8rem;">Aucun historique.</div>'; 
+        else hBox.innerHTML = recKeys.map(k=>{ 
+            let gId = rec[k];
+            let g = [...(portalState.games||[]), ...(portalState.quiz||[])].find(x=>x.id===gId); 
+            let date = new Date(parseInt(k));
+            let dStr = `${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+            return `<div class="leader-item"><span>🕹️ ${g?g.title:'Jeu inconnu'}</span><span style="color:var(--text-muted); font-size:0.7rem;">${dStr}</span></div>`; 
+        }).join(''); 
+    }
+}
+function deleteConv(uid, e) { e.stopPropagation(); if(confirm("Supprimer cette conversation ?")) { db.ref(`portal_users/${portalState.currentUser.uid}/inbox/${uid}`).remove(); } }
+function openProfile(uid) { currentProfileUid = uid; let u = portalState.usersList[uid] || {}; document.getElementById('pp-nom').innerText = (u.name||'Joueur') + (u.friendCode ? " #"+u.friendCode : ""); document.getElementById('pp-ava').innerText = u.avatar || '👤'; document.getElementById('pp-modal').style.display='flex'; }
+function openPM() { if(!portalState.currentUser || !currentProfileUid) return alert("Erreur."); document.getElementById('pp-modal').style.display='none'; currentPmId = portalState.currentUser.uid < currentProfileUid ? `${portalState.currentUser.uid}_${currentProfileUid}` : `${currentProfileUid}_${portalState.currentUser.uid}`; let uObj = portalState.usersList[currentProfileUid] || {}; document.getElementById('pm-title').innerText = uObj.name || 'Joueur'; document.getElementById('pm-modal').style.display='flex'; db.ref(`portal_users/${portalState.currentUser.uid}/inbox/${currentProfileUid}`).update({unread: false, unreadCount: 0}); db.ref('portal_pms/'+currentPmId).on('value', s => { let b = document.getElementById('pm-messages'); b.innerHTML=''; if(s.exists()) { s.forEach(c => { let m=c.val(); b.innerHTML+=`<div class="chat-msg ${m.uid===portalState.currentUser.uid?'me':''}">${m.text}</div>`; }); b.scrollTop = b.scrollHeight; } }); }
+function sendPM() { let v = document.getElementById('pm-input').value.trim(); if(v && currentPmId) { let now = Date.now(); db.ref('portal_pms/'+currentPmId).push({uid:portalState.currentUser.uid, text:v, time:now}); document.getElementById('pm-input').value=''; db.ref(`portal_users/${portalState.currentUser.uid}/inbox/${currentProfileUid}`).update({lastMsg: v, time: now, unread: false, unreadCount: 0}); let rRef = db.ref(`portal_users/${currentProfileUid}/inbox/${portalState.currentUser.uid}`); rRef.once('value', s => { let cC = s.exists() && s.val().unreadCount ? s.val().unreadCount : 0; rRef.update({lastMsg: v, time: now, unread: true, unreadCount: cC + 1}); }); } }
+function closePM() { document.getElementById('pm-modal').style.display='none'; if(currentPmId) db.ref('portal_pms/'+currentPmId).off(); currentPmId=null; }
+</script>
+</body>
+</html>
