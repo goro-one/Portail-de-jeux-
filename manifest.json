@@ -1,0 +1,21 @@
+{
+  "name": "BOARDIZ",
+  "short_name": "BOARDIZ",
+  "description": "Jeux de société et Quiz en ligne",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/goro-one/Portail-de-jeux-/main/Logo-complet.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/goro-one/Portail-de-jeux-/main/Logo-complet.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
