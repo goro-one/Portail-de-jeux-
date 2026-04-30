@@ -8,12 +8,12 @@
   "theme_color": "#1e293b",
   "icons": [
     {
-      "src": "https://github.com/goro-one/Portail-de-jeux-/blob/main/logo%20page.png?raw=true",
+      "src": "https://github.com/goro-one/Portail-de-jeux-/blob/main/logo%20final.png?raw=true",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://github.com/goro-one/Portail-de-jeux-/blob/main/logo%20page.png?raw=true",
+      "src": "https://github.com/goro-one/Portail-de-jeux-/blob/main/logo%20final.png?raw=true",
       "sizes": "512x512",
       "type": "image/png"
     }
