@@ -1442,3 +1442,54 @@ function viewSuggestions(){document.getElementById('admin-sugg-modal').style.dis
 function viewBugs(){document.getElementById('admin-bugs-modal').style.display='flex';db.ref('portal_bugs').on('value',s=>{let b=document.getElementById('bugs-list');b.innerHTML='';if(s.exists()){s.forEach(c=>{let d=c.val();let date=new Date(d.time);let ds=`${date.getDate()}/${date.getMonth()+1} ${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;b.innerHTML+=`<div class=\"quest-box\" style=\"font-size:0.82rem; border-color:rgba(244,63,94,0.3);\"><div style=\"display:flex;justify-content:space-between;margin-bottom:4px;\"><b style=\"color:var(--red);\">${d.author}</b><span style=\"font-size:0.7rem;color:var(--text-muted);\">${ds}</span></div>${d.text}</div>`;});}else b.innerHTML='<div style=\"opacity:0.5;\">Aucun bug signalé.</div>';});}
 function clearBugs(){if(confirm('Effacer tous les bugs ?')){db.ref('portal_bugs').remove();showToast('Bugs effacés','success');}}
 function sendInvite(uid,e){if(e)e.stopPropagation();if(!portalState.currentLobbyId||!portalState.pendingLaunchId)return;let g=[...(portalState.games||[]),...(portalState.quiz||[])].find(x=>x.id===portalState.pendingLaunchId);db.ref(`portal_users/${uid}/invites`).push({fromName:portalState.currentUser.name,gameId:portalState.pendingLaunchId,gameTitle:g?g.title:'Un jeu',lobbyId:portalState.currentLobbyId,time:Date.now()});showToast('Invitation envoyée !','success');}
+/* ===== LOBBIES UI (AFFICHAGE DES SALONS ACTIFS) ===== */
+function renderLobbiesUI() {
+  let list = document.getElementById('lobbies-list');
+  if (!list) return;
+
+  // Récupérer et fusionner les salons de jeux classiques et de quiz
+  let allLobbies = { ...portalState.activeLobbies.portal, ...portalState.activeLobbies.quiz };
+  let keys = Object.keys(allLobbies);
+
+  // Mettre à jour le petit badge rouge de notification sur l'icône "Salons"
+  let badge = document.getElementById('nav-lobbies-badge');
+  if (badge) {
+    badge.innerText = keys.length;
+    badge.style.display = keys.length > 0 ? 'flex' : 'none';
+  }
+
+  // S'il n'y a aucun salon actif
+  if (keys.length === 0) {
+    list.innerHTML = "<div class='empty-state'><div class='empty-state-icon'>🚪</div><div class='empty-state-text'>Aucun salon actif.</div></div>";
+    return;
+  }
+
+  // Créer les cartes pour chaque salon existant
+  let html = keys.map(k => {
+    let l = allLobbies[k];
+    let pCount = l.players ? Object.keys(l.players).length : 1;
+    let isArena = l.arenaStake && l.arenaStake > 0;
+    
+    // Tag visuel si c'est le mode arène avec mise
+    let arenaTag = isArena ? `<span style="background:var(--purple); color:white; padding:2px 6px; border-radius:4px; font-size:0.6rem; font-weight:bold; margin-left:6px; vertical-align:middle;">ARÈNE 🪙 ${l.arenaStake}</span>` : '';
+
+    // Bouton de suppression (uniquement visible pour le créateur du salon ou l'admin)
+    let isHostOrAdmin = portalState.role === 'admin' || (portalState.currentUser && l.host === portalState.currentUser.uid);
+    let delBtn = isHostOrAdmin ? `<button class="portal-btn btn-cancel" style="margin:0; width:auto; padding:8px 12px;" onclick="deleteLobbyManual('${k}', ${l.isQuiz ? 'true' : 'false'}, event)">✕</button>` : '';
+
+    return `<div class="lobby-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="font-family:'Bungee'; color:var(--accent); font-size:1rem;">${l.gameTitle} ${arenaTag}</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">👥 ${pCount}</div>
+      </div>
+      <div style="font-size:0.8rem; color:var(--text-main); margin-bottom:12px;">Hôte : <b>${l.hostName}</b></div>
+      <div style="display:flex; gap:8px;">
+        <button class="portal-btn btn-admin" style="margin:0; padding:8px;" onclick="directJoinLobby('${l.gameId}', '${k}')">REJOINDRE</button>
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Afficher toutes les cartes générées dans le conteneur HTML
+  list.innerHTML = html;
+}
